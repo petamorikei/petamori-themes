@@ -1,6 +1,7 @@
-// palette.ts の規則から、Zed のテーマ1つ分の style を組み立てる
+// 配色（Palette）の規則から、Zed のテーマ1つ分の style を組み立てる。
+// どのキーにどの役割・段階を使うかはここで決め、すべてのテーマで共通にする。
 import { hexOklch, oklchHex, solveInk, withAlpha } from "./color.ts";
-import { type Mode, type Palette, palette, type Role, type Tier } from "./palette.ts";
+import type { Mode, Palette, Role, Tier } from "./palette.ts";
 
 export interface SyntaxStyle {
   color: string;
@@ -22,15 +23,13 @@ export interface Theme {
 export interface BuildOptions {
   /** WCAG 2 の最低ラインを確かめる背景。省略時はエディタの背景だけ（ブラー版では壁紙に重ねた色を渡す） */
   floorBgs?: readonly string[];
-  /** 使う配色。省略時は palette.ts の palette（比較用テーマでは一部を書き換えたものを渡す） */
-  palette?: Palette;
 }
 
 /** 生成した色の彩度が、指定より大きく下がったもの（sRGB に収まらなかったもの）を記録する */
 export const gamutNotes: string[] = [];
 
-export const buildStyle = (mode: Mode, options: BuildOptions = {}): Style => {
-  const { config, roles, tiers, surface, terminal } = options.palette ?? palette;
+export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions = {}): Style => {
+  const { config, roles, tiers, surface, terminal } = palette;
   const dark = mode === "dark";
   const editorL = surface.editorL[mode];
   const editorBg = oklchHex(editorL, surface.chroma, surface.hue);
@@ -100,19 +99,20 @@ export const buildStyle = (mode: Mode, options: BuildOptions = {}): Style => {
   const textMuted = ink("neutral", "muted");
   const placeholder = ink("neutral", "faint");
   const disabled = ink("neutral", "disabled");
-  const accent = ink("rose", "accent");
-  const keyword = ink("roseVivid", "accent");
-  const fn = ink("peach", "primary");
-  const type = ink("lavender", "accent");
-  const string = ink("sage", "primary");
-  const number = ink("apricot", "primary");
-  const enumC = ink("blue", "primary");
-  const teal = ink("teal", "primary");
-  const error = ink("coral", "muted");
-  const hint = ink("violet", "muted");
+  const accent = ink("accent", "accent");
+  const keyword = ink("keyword", "accent");
+  const fn = ink("function", "primary");
+  const type = ink("type", "accent");
+  const string = ink("string", "primary");
+  const number = ink("number", "primary");
+  const enumC = ink("enum", "primary");
+  const link = ink("link", "primary");
+  // error は彩度がとても高く明るく見えるので、muted の段階まで下げる
+  const error = ink("error", "muted");
+  const hint = ink("hint", "muted");
   const comment = ink("neutral", "faint");
   const predictive = ink("neutral", "faint");
-  const vcsAdded = ink("vcsGreen", "accent", { floor: 4.5 });
+  const vcsAdded = ink("vcsAdded", "accent", { floor: 4.5 });
 
   // 状態色の枠線: 役割の色相で、背景から border と同じだけ離す。グレー系の状態はふつうの枠線を使う
   const statusBorder = (role: Role): string => surf(0.125, "fg", roles[role].h, surface.statusBorderChroma);
@@ -150,19 +150,19 @@ export const buildStyle = (mode: Mode, options: BuildOptions = {}): Style => {
     [`terminal.ansi.dim_${name}`]: ink(role, tier, { scale: terminal.dimScale, floor: 0 }),
   });
 
-  const playerColors = [accent, fn, type, teal, enumC, number, string, error];
+  const playerColors = [accent, fn, type, link, enumC, number, string, error];
 
   const s = (color: string, extra: Omit<SyntaxStyle, "color"> = {}): SyntaxStyle => ({ color, ...extra });
   const italic = { font_style: "italic" } as const;
   const bold = { font_weight: 700 } as const;
 
   return {
-    accents: [accent, type, enumC, teal, string, number, fn],
+    accents: [accent, type, enumC, link, string, number, fn],
 
     border,
     "border.variant": hover,
-    "border.focused": ink("rose", "muted", { floor: 3 }),
-    "border.selected": surf(0.15, "fg", roles.rose.h, 0.05),
+    "border.focused": ink("accent", "muted", { floor: 3 }),
+    "border.selected": surf(0.15, "fg", roles.accent.h, 0.05),
     "border.transparent": CLEAR,
     "border.disabled": muted,
 
@@ -228,7 +228,7 @@ export const buildStyle = (mode: Mode, options: BuildOptions = {}): Style => {
     "editor.active_line.background": tint(hover, 0.6),
     "editor.highlighted_line.background": highlighted,
     "editor.line_number": ink("neutral", "faint"),
-    "editor.active_line_number": ink("rosePale", "primary"),
+    "editor.active_line_number": ink("activeLineNumber", "primary"),
     "editor.hover_line_number": textMuted,
     "editor.invisible": strongLine,
     "editor.wrap_guide": tint(accent, 0.05),
@@ -246,39 +246,39 @@ export const buildStyle = (mode: Mode, options: BuildOptions = {}): Style => {
     "terminal.ansi.black": ansiBW.black,
     "terminal.ansi.bright_black": ansiBW.bright_black,
     "terminal.ansi.dim_black": ansiBW.dim_black,
-    ...ansi("red", "coral", "muted"),
-    ...ansi("green", "sage", "primary"),
-    ...ansi("yellow", "apricot", "primary"),
-    ...ansi("blue", "blue", "primary"),
-    ...ansi("magenta", "rose", "accent"),
-    ...ansi("cyan", "teal", "primary"),
+    ...ansi("red", "error", "muted"),
+    ...ansi("green", "string", "primary"),
+    ...ansi("yellow", "number", "primary"),
+    ...ansi("blue", "enum", "primary"),
+    ...ansi("magenta", "accent", "accent"),
+    ...ansi("cyan", "link", "primary"),
     "terminal.ansi.white": ansiBW.white,
     "terminal.ansi.bright_white": ansiBW.bright_white,
     "terminal.ansi.dim_white": ansiBW.dim_white,
 
     // ガターの印は面積が小さいので彩度を残したい。accent の段階にして、Dawn で暗くなりすぎないよう floor は 4.5 にする
     "version_control.added": vcsAdded,
-    "version_control.modified": ink("vcsAmber", "accent", { floor: 4.5 }),
+    "version_control.modified": ink("vcsModified", "accent", { floor: 4.5 }),
     "version_control.deleted": error,
     "version_control.word_added": tint(vcsAdded, 0.2),
     "version_control.word_deleted": tint(error, 0.25),
     "version_control.conflict_marker.ours": tint(string, 0.1),
     "version_control.conflict_marker.theirs": tint(enumC, 0.1),
 
-    ...status("conflict", fn, statusBorder("peach")),
-    ...status("created", string, statusBorder("sage")),
-    ...status("deleted", error, statusBorder("coral")),
-    ...status("error", error, statusBorder("coral")),
+    ...status("conflict", fn, statusBorder("function")),
+    ...status("created", string, statusBorder("string")),
+    ...status("deleted", error, statusBorder("error")),
+    ...status("error", error, statusBorder("error")),
     ...status("hidden", placeholder, muted),
-    ...status("hint", hint, statusBorder("violet")),
+    ...status("hint", hint, statusBorder("hint")),
     ...status("ignored", placeholder, border),
-    ...status("info", enumC, statusBorder("blue")),
-    ...status("modified", number, statusBorder("apricot")),
+    ...status("info", enumC, statusBorder("enum")),
+    ...status("modified", number, statusBorder("number")),
     ...status("predictive", predictive, muted),
-    ...status("renamed", enumC, statusBorder("blue")),
-    ...status("success", string, statusBorder("sage")),
+    ...status("renamed", enumC, statusBorder("enum")),
+    ...status("success", string, statusBorder("string")),
     ...status("unreachable", textMuted, border),
-    ...status("warning", number, statusBorder("apricot")),
+    ...status("warning", number, statusBorder("number")),
 
     players: playerColors.map((c) => ({ cursor: c, background: c, selection: tint(c, 0.24) })),
 
@@ -300,14 +300,14 @@ export const buildStyle = (mode: Mode, options: BuildOptions = {}): Style => {
       keyword: s(keyword),
       label: s(enumC),
       link_text: s(enumC, italic),
-      link_uri: s(teal),
+      link_uri: s(link),
       namespace: s(ink("neutral", "primary")),
       number: s(number),
-      operator: s(ink("mauve", "muted")),
+      operator: s(ink("operator", "muted")),
       predictive: s(predictive, italic),
       preproc: s(type),
       primary: s(fg),
-      property: s(ink("blush", "primary")),
+      property: s(ink("property", "primary")),
       punctuation: s(textMuted),
       "punctuation.bracket": s(textMuted),
       "punctuation.delimiter": s(textMuted),
@@ -326,7 +326,7 @@ export const buildStyle = (mode: Mode, options: BuildOptions = {}): Style => {
       title: s(accent, bold),
       type: s(type),
       variable: s(fg),
-      "variable.parameter": s(ink("cream", "primary")),
+      "variable.parameter": s(ink("parameter", "primary")),
       "variable.special": s(keyword, italic),
       variant: s(enumC),
     },

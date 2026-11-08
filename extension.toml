@@ -1,7 +1,7 @@
-id = "peony"
-name = "Peony"
+id = "petamori-themes"
+name = "Petamori Themes"
 version = "0.1.0"
 schema_version = 1
 authors = ["kei <petamorikei@gmail.com>"]
-description = "Cozy, aesthetic themes built around a calm dusty pink. Peony Dusk (dark) and Peony Dawn (light)."
-# repository = "https://github.com/<you>/zed-theme"  # 公開時に設定
+description = "A collection of color themes by Petamori."
+# repository = "https://github.com/<you>/<repo>"  # 公開時に設定

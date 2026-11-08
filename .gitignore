@@ -34,4 +34,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 
 # 比較用テーマ（bun run variants が生成する）
-themes/peony-variants.json
+themes/*-variants.json

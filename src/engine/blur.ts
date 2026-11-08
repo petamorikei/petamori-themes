@@ -3,7 +3,7 @@
 // 方針: 色を乗せるのはウィンドウ全体の "background" だけにして、その上の層は透明にする
 // （半透明を何層も重ねると濃さがまばらになるため）。パネルなどの階層は、低いアルファで重ねて出す。
 import { over, withAlpha } from "./color.ts";
-import { palette as defaultPalette, type Mode, type Palette } from "./palette.ts";
+import type { Mode, Palette } from "./palette.ts";
 import { buildStyle, type Style, type Theme } from "./theme.ts";
 
 const CLEAR = "#00000000";
@@ -29,12 +29,12 @@ const str = (style: Style, key: string): string => {
   return v;
 };
 
-export const buildBlurTheme = (mode: Mode, name: string, palette: Palette = defaultPalette): Theme => {
+export const buildBlurTheme = (palette: Palette, mode: Mode, name: string): Theme => {
   const { opacity, overlay } = palette.blur;
-  const editorBg = str(buildStyle(mode, { palette }), "editor.background");
+  const editorBg = str(buildStyle(palette, mode), "editor.background");
   const background = withAlpha(editorBg, opacity);
   // 文字色の最低ラインは、半透明の background を黒い壁紙と白い壁紙に重ねた色の両方で確かめる
-  const base = buildStyle(mode, { palette, floorBgs: [over(background, "#000000"), over(background, "#ffffff")] });
+  const base = buildStyle(palette, mode, { floorBgs: [over(background, "#000000"), over(background, "#ffffff")] });
   const style: Style = { "background.appearance": "blurred", ...base, background };
   for (const k of transparentKeys) style[k] = CLEAR;
   for (const [k, [source, alpha]] of Object.entries(overlay[mode])) style[k] = withAlpha(str(base, source), alpha);

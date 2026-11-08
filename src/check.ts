@@ -3,8 +3,8 @@
 // 透過テーマ（background.appearance が opaque 以外）は、半透明の background を
 // 黒い壁紙と白い壁紙それぞれに重ねた色で計算し、悪いほうの値を表示する。
 import { Glob } from "bun";
-import { apca, hexOklch, over, wcag } from "./color.ts";
-import type { SyntaxStyle, Theme } from "./theme.ts";
+import { apca, hexOklch, over, wcag } from "./engine/color.ts";
+import type { SyntaxStyle, Theme } from "./engine/theme.ts";
 
 interface Family {
   themes: Theme[];

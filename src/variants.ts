@@ -1,26 +1,29 @@
-// 比較用テーマを生成する。今の palette.ts をベースラインとして、一部を書き換えた案を並べる。
-// 使い方: bun run variants → themes/peony-variants.json（git の管理外）
+// 比較用テーマを生成する。今の配色をベースラインとして、一部を書き換えた案を並べる。
+// 使い方: bun run variants → themes/<テーマの id>-variants.json（git の管理外）
 //
 // 進め方:
-// 1. 下の experiments に案を書き、bun run variants を実行する。
+// 1. 下の SET に対象のテーマの id を、experiments に案を書き、bun run variants を実行する。
 // 2. Zed で `zed: rebuild dev extension` を実行し、テーマセレクターで無印のテーマ（ベースライン）と見比べる。
-// 3. 採用する案が決まったら palette.ts に反映し、experiments を空に戻す（空なら比較用テーマのファイルは消える）。
+// 3. 採用する案が決まったら src/palettes/<id>.ts に反映し、experiments を空に戻す
+//    （空なら比較用テーマのファイルは消える）。
 import { unlink } from "node:fs/promises";
+import { Glob } from "bun";
 import { differenceEuclidean } from "culori";
-import { buildBlurTheme } from "./blur.ts";
-import { writeFamily } from "./build.ts";
-import { alphaOf } from "./color.ts";
-import { type Mode, type Palette, palette } from "./palette.ts";
-import { buildStyle, type Style, type Theme } from "./theme.ts";
+import { alphaOf } from "./engine/color.ts";
+import { buildBlurred, buildOpaque, writeFamily } from "./engine/family.ts";
+import type { Palette } from "./engine/palette.ts";
+import type { Style, Theme } from "./engine/theme.ts";
+import { themeSets } from "./palettes/index.ts";
 
-const OUT = "themes/peony-variants.json";
+/** 対象のテーマの id（src/palettes/index.ts に登録したもの） */
+const SET = "peony";
 
 type Target = "opaque" | "blur";
 
 interface Experiment {
   /** テーマセレクターに出る名前の一部 */
   label: string;
-  /** palette の複製を書き換える */
+  /** 配色の複製を書き換える */
   apply: (p: Palette) => void;
   /** どの版で作るか（省略時は不透明版だけ） */
   targets?: Target[];
@@ -33,21 +36,19 @@ const experiments: Experiment[] = [];
 
 // ---------------------------------------------------------------
 
-const modes: { mode: Mode; name: string }[] = [
-  { mode: "dark", name: "Peony Dusk" },
-  { mode: "light", name: "Peony Dawn" },
-];
-
 if (experiments.length === 0) {
-  await unlink(OUT).catch(() => {});
-  console.log(`案がないので ${OUT} を消しました`);
+  for (const path of new Glob("themes/*-variants.json").scanSync()) {
+    await unlink(path);
+    console.log(`案がないので ${path} を消しました`);
+  }
   process.exit(0);
 }
 
-const build = (target: Target, mode: Mode, name: string, p: Palette): Theme =>
-  target === "blur"
-    ? buildBlurTheme(mode, `${name} Blur`, p)
-    : { name, appearance: mode, style: buildStyle(mode, { palette: p }) };
+const set = themeSets.find((s) => s.id === SET);
+if (!set) throw new Error(`テーマ ${SET} が src/palettes/index.ts にない`);
+const out = `themes/${set.id}-variants.json`;
+
+const build = (target: Target, p: Palette): Theme[] => (target === "blur" ? buildBlurred(set, p) : buildOpaque(set, p));
 
 const de = differenceEuclidean("oklab");
 const colors = (s: Style): Map<string, string> => {
@@ -62,13 +63,14 @@ const colors = (s: Style): Map<string, string> => {
 const sample = ["editor.background", "panel.background", "text", "syntax.keyword"];
 
 const themes: Theme[] = [];
-for (const { mode, name } of modes) {
-  for (const e of experiments) {
-    for (const target of e.targets ?? ["opaque"]) {
-      const baseTheme = build(target, mode, name, palette);
-      const p = structuredClone(palette);
-      e.apply(p);
-      const theme = build(target, mode, name, p);
+for (const e of experiments) {
+  for (const target of e.targets ?? ["opaque"]) {
+    const p = structuredClone(set.palette);
+    e.apply(p);
+    const baseline = build(target, set.palette);
+    for (const [i, theme] of build(target, p).entries()) {
+      const baseTheme = baseline[i];
+      if (!baseTheme) continue;
       const label = `${baseTheme.name} [${e.label}]`;
       themes.push({ ...theme, name: label });
 
@@ -88,5 +90,5 @@ for (const { mode, name } of modes) {
   }
 }
 
-await writeFamily(OUT, "Peony Variants", themes);
-console.log(`\n${OUT} を生成しました（${themes.length} テーマ）`);
+await writeFamily(out, `${set.family} Variants`, themes);
+console.log(`\n${out} を生成しました（${themes.length} テーマ）`);
