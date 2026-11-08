@@ -1,0 +1,21 @@
+{
+  "name": "zed-themes",
+  "type": "module",
+  "scripts": {
+    "check": "biome check --write .",
+    "build": "bun src/build.ts",
+    "check:theme": "bun src/check.ts",
+    "variants": "bun src/variants.ts",
+    "prepare": "mise exec -- prek install"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.6",
+    "@types/bun": "latest",
+    "@types/culori": "^4.0.1",
+    "apca-w3": "^0.1.9",
+    "culori": "^4.0.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
