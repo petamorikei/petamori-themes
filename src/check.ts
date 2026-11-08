@@ -1,6 +1,6 @@
-// テーマの簡易チェック: WCAG 2 のコントラスト比（合否の判定）と APCA の Lc（参考）、One テーマとのキー差分
-// 使い方: bun run check:theme [テーマJSON(省略時は themes/*.json 全部)] [one.json(任意)]
-// 透過テーマ（background.appearance が opaque 以外）は、半透明の background を
+// テーマの簡易チェック: WCAG 2のコントラスト比（合否の判定）とAPCAのLc（参考）、Oneテーマとのキー差分
+// 使い方: bun run check:theme [テーマJSON(省略時はthemes/*.json全部)] [one.json(任意)]
+// 透過テーマ（background.appearanceがopaque以外）は、半透明のbackgroundを
 // 黒い壁紙と白い壁紙それぞれに重ねた色で計算し、悪いほうの値を表示する。
 import { Glob } from "bun";
 import { apca, hexOklch, over, wcag } from "./engine/color.ts";
@@ -13,7 +13,7 @@ interface Family {
 const themePaths = process.argv[2] ? [process.argv[2]] : [...new Glob("themes/*.json").scanSync()].sort();
 const refPath = process.argv[3];
 
-// 低コントラストを意図的に許容するもの（目標 3:1）
+// 低コントラストを意図的に許容するもの（目標3:1）
 const SOFT = new Set([
   "syntax.comment",
   "syntax.comment.doc",
@@ -36,7 +36,7 @@ for (const themePath of themePaths) {
     const translucent = (s["background.appearance"] ?? "opaque") !== "opaque";
     const background = color(s.background);
     const editorBg = color(s["editor.background"]);
-    if (!background || !editorBg) throw new Error(`${t.name}: background か editor.background がない`);
+    if (!background || !editorBg) throw new Error(`${t.name}: backgroundかeditor.backgroundがない`);
     // 比較に使う背景（透過テーマは黒壁紙・白壁紙の2通り）
     const bgs = translucent ? [over(background, "#000000"), over(background, "#ffffff")] : [editorBg];
     const syntax = (s.syntax ?? {}) as Record<string, SyntaxStyle>;
@@ -55,6 +55,7 @@ for (const themePath of themePaths) {
     for (const [k, v] of items) {
       if (!v) {
         failed++;
+        // 「FAIL」のあとのスペースは、検査結果の列の区切り
         console.log(`FAIL 色がない: ${k}`);
         continue;
       }
@@ -67,20 +68,20 @@ for (const themePath of themePaths) {
         `${ok ? "OK  " : "FAIL"} ${r.toFixed(2).padStart(5)} (>=${need}) Lc${lc.toFixed(0).padStart(4)}  ${k} ${v}`,
       );
     }
-    // ピンクのアクセントと error の見分けやすさ（色同士のコントラストと OKLCH の色相差）
+    // ピンクのアクセントとerrorの見分けやすさ（色同士のコントラストとOKLCHの色相差）
     const accent = color(s["text.accent"]);
     const error = color(s.error);
     if (accent && error) {
       const dh = Math.abs(hexOklch(accent).h - hexOklch(error).h);
       console.log(
-        `accent vs error: 色相差 ${Math.min(dh, 360 - dh).toFixed(0)}°, contrast ${wcag(accent, error).toFixed(2)}`,
+        `accent vs error: 色相差${Math.min(dh, 360 - dh).toFixed(0)}°, contrast ${wcag(accent, error).toFixed(2)}`,
       );
     }
   }
 
   if (refPath) {
     const ref = ((await Bun.file(refPath).json()) as Family).themes[0]?.style;
-    if (!ref) throw new Error(`${refPath} にテーマがない`);
+    if (!ref) throw new Error(`${refPath}にテーマがない`);
     const refSyntax = (ref.syntax ?? {}) as Record<string, SyntaxStyle>;
     for (const t of family.themes) {
       const keys = new Set(Object.keys(t.style));
@@ -91,7 +92,7 @@ for (const themePath of themePaths) {
           .filter((k) => !synKeys.has(k))
           .map((k) => `syntax.${k}`),
       ];
-      console.log(`\n${t.name}: One にあって未定義のキー: ${missing.join(", ") || "なし"}`);
+      console.log(`\n${t.name}: Oneにあって未定義のキー: ${missing.join(", ") || "なし"}`);
     }
   }
 }

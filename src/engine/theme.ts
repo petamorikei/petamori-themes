@@ -1,4 +1,4 @@
-// 配色（Palette）の規則から、Zed のテーマ1つ分の style を組み立てる。
+// 配色（Palette）の規則から、Zedのテーマ1つ分のstyleを組み立てる。
 // どのキーにどの役割・段階を使うかはここで決め、すべてのテーマで共通にする。
 import { hexOklch, oklchHex, solveInk, withAlpha } from "./color.ts";
 import type { Mode, Palette, Role, Tier } from "./palette.ts";
@@ -21,11 +21,11 @@ export interface Theme {
 }
 
 export interface BuildOptions {
-  /** WCAG 2 の最低ラインを確かめる背景。省略時はエディタの背景だけ（ブラー版では壁紙に重ねた色を渡す） */
+  /** WCAG 2の最低ラインを確かめる背景。省略時はエディタの背景だけ（ブラー版では壁紙に重ねた色を渡す） */
   floorBgs?: readonly string[];
 }
 
-/** 生成した色の彩度が、指定より大きく下がったもの（sRGB に収まらなかったもの）を記録する */
+/** 生成した色の彩度が、指定より大きく下がったもの（sRGBに収まらなかったもの）を記録する */
 export const gamutNotes: string[] = [];
 
 export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions = {}): Style => {
@@ -37,7 +37,7 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
 
   // ---- 文字の色 ----
   const cache = new Map<string, string>();
-  /** scale: 段階の目標値にかける倍率（ターミナルの bright / dim 用）。floor: WCAG 2 の最低ラインを段階の値から変える */
+  /** scale: 段階の目標値にかける倍率（ターミナルのbright / dim用）。floor: WCAG 2の最低ラインを段階の値から変える */
   const ink = (role: Role, tier: Tier, opts: { scale?: number; floor?: number } = {}): string => {
     const scale = opts.scale ?? 1;
     const floor = opts.floor ?? tiers[tier].floor;
@@ -59,9 +59,7 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     cache.set(key, hex);
     const got = hexOklch(hex).c;
     if (chroma - got > 0.005) {
-      gamutNotes.push(
-        `${mode} ${role}/${tier}: 彩度 ${chroma.toFixed(3)} → ${got.toFixed(3)}（sRGB に収まらないため）`,
-      );
+      gamutNotes.push(`${mode} ${role}/${tier}: 彩度${chroma.toFixed(3)} → ${got.toFixed(3)}（sRGBに収まらないため）`);
     }
     return hex;
   };
@@ -107,14 +105,14 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
   const number = ink("number", "primary");
   const enumC = ink("enum", "primary");
   const link = ink("link", "primary");
-  // error は彩度がとても高く明るく見えるので、muted の段階まで下げる
+  // errorは彩度がとても高く明るく見えるので、mutedの段階まで下げる
   const error = ink("error", "muted");
   const hint = ink("hint", "muted");
   const comment = ink("neutral", "faint");
   const predictive = ink("neutral", "faint");
   const vcsAdded = ink("vcsAdded", "accent", { floor: 4.5 });
 
-  // 状態色の枠線: 役割の色相で、背景から border と同じだけ離す。グレー系の状態はふつうの枠線を使う
+  // 状態色の枠線: 役割の色相で、背景からborderと同じだけ離す。グレー系の状態はふつうの枠線を使う
   const statusBorder = (role: Role): string => surf(0.125, "fg", roles[role].h, surface.statusBorderChroma);
 
   const status = (name: string, color: string, borderColor: string): Style => ({
@@ -123,7 +121,7 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     [`${name}.border`]: borderColor,
   });
 
-  // ANSI の black / white は「black は暗い、white は明るい」の意味どおりにする
+  // ANSIのblack / whiteは「blackは暗い、whiteは明るい」の意味どおりにする
   const ansiBW = dark
     ? {
         black: hover,
@@ -142,8 +140,8 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
         dim_white: disabled,
       };
 
-  // ANSI の色: 通常はシンタックスと同じ段階。bright と dim は、その目標値に倍率をかける
-  // （Dawn では bright のほうが背景から遠い＝暗くなる）
+  // ANSIの色: 通常はシンタックスと同じ段階。brightとdimは、その目標値に倍率をかける
+  // （Dawnではbrightのほうが背景から遠い＝暗くなる）
   const ansi = (name: string, role: Role, tier: Tier): Style => ({
     [`terminal.ansi.${name}`]: ink(role, tier),
     [`terminal.ansi.bright_${name}`]: ink(role, tier, { scale: terminal.brightScale }),
@@ -203,7 +201,7 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     "tab.active_background": editorBg,
     "panel.background": panel,
     "panel.focused_border": null,
-    // スティッキースクロールで固定される行（省略時に Zed が作る色と同じものを明示する）
+    // スティッキースクロールで固定される行（省略時にZedが作る色と同じものを明示する）
     "panel.overlay_background": panel,
     "panel.overlay_hover": hover,
     "panel.indent_guide": hover,
@@ -256,7 +254,7 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     "terminal.ansi.bright_white": ansiBW.bright_white,
     "terminal.ansi.dim_white": ansiBW.dim_white,
 
-    // ガターの印は面積が小さいので彩度を残したい。accent の段階にして、Dawn で暗くなりすぎないよう floor は 4.5 にする
+    // ガターの印は面積が小さいので彩度を残したい。accentの段階にして、Dawnで暗くなりすぎないようfloorは4.5にする
     "version_control.added": vcsAdded,
     "version_control.modified": ink("vcsModified", "accent", { floor: 4.5 }),
     "version_control.deleted": error,

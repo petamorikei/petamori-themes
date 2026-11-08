@@ -1,13 +1,13 @@
-// Fuchsia（案 A「ネオン」から）: 無彩色のキャンバスに、ピンクが主役。
-// 規則の説明は src/engine/palette.ts を参照。
+// Fuchsia（案A「ネオン」から）: 無彩色のキャンバスに、ピンクが主役。
+// 規則の説明はsrc/engine/palette.tsを参照。
 //
-// - 背景: Dusk はほぼ黒、Dawn はほぼ白。色味はほとんど乗せない
-// - ピンク: keyword・アクセントに、sRGB で出せる限界まで鮮やかなホットピンクを使う
+// - 背景: Duskはほぼ黒、Dawnはほぼ白。色味はほとんど乗せない
+// - ピンク: keyword・アクセントに、sRGBで出せる限界まで鮮やかなホットピンクを使う
 // - ほかの色: 文字列だけミント（ピンクの補色に近い色）。関数・型・数値などは彩度を落として控えめにする。
 //   周りが無彩色だと、同じ色でも鮮やかに見える（色の対比）ことを利用する
 // - error: ピンクと見分けやすいよう、オレンジ寄りにする（関数がピーチではないので、オレンジと重ならない）
-// 段階（コントラストの目標値。accent を除く）、ターミナルの倍率、ブラー版の設定は、Peony と同じ値にしている
-// （Peony を変えても追従しないよう、値を書き写している）。
+// 段階（コントラストの目標値。accentを除く）、ターミナルの倍率、ブラー版の設定は、Peonyと同じ値にしている
+// （Peonyを変えても追従しないよう、値を書き写している）。
 import type { ThemeSet } from "../engine/palette.ts";
 
 const PINK = 355;
@@ -19,7 +19,7 @@ export const fuchsia: ThemeSet = {
   palette: {
     config: {
       metric: "apca",
-      // 元の彩度を高めに指定しているので、ライトで倍率はかけない。上限は sRGB に任せる
+      // 元の彩度を高めに指定しているので、ライトで倍率はかけない。上限はsRGBに任せる
       lightChromaScale: 1,
       lightChromaMax: 0.3,
       lightOverlayScale: 0.8,
@@ -27,7 +27,7 @@ export const fuchsia: ThemeSet = {
 
     roles: {
       neutral: { h: PINK, c: 0.008 }, // ほぼ無彩色のグレー
-      accent: { h: PINK, c: 0.3 }, // ホットピンク（実際の彩度は sRGB の限界で決まる）
+      accent: { h: PINK, c: 0.3 }, // ホットピンク（実際の彩度はsRGBの限界で決まる）
       keyword: { h: 356, c: 0.3 },
       activeLineNumber: { h: PINK, c: 0.12 },
       operator: { h: PINK, c: 0.1 }, // 演算子もピンク寄りにして、ピンクの面積を増やす
@@ -46,13 +46,13 @@ export const fuchsia: ThemeSet = {
       error: { h: 42, c: 0.19 }, // オレンジ。ピンク（355°）との色相差は約47°
     },
 
-    // accent 以外は Peony と同じ値（各段階の意味は src/palettes/peony.ts を参照）
+    // accent以外はPeonyと同じ値（各段階の意味はsrc/palettes/peony.tsを参照）
     tiers: {
       strong: { apca: 90, wcag: 13, floor: 7.5 },
       body: { apca: 81, wcag: 11.2, floor: 6 },
       primary: { apca: 71, wcag: 9.5, floor: 5.5 },
-      // keyword・アクセント・型の段階。ダークで Peony の Lc 60 から 55 に下げ、ピンクを鮮やかにする
-      // （比較用テーマで確認して採用）。ライトはこの段階が WCAG 2 の最低ライン（5）で決まるので変わらない
+      // keyword・アクセント・型の段階。ダークでPeonyのLc 60から55に下げ、ピンクを鮮やかにする
+      // （比較用テーマで確認して採用）。ライトはこの段階がWCAG 2の最低ライン（5）で決まるので変わらない
       accent: { apca: 55, wcag: 7.75, floor: 5 },
       muted: { apca: 52, wcag: 6.6, floor: 4.5 },
       subtle: { apca: 40, wcag: 4.9, floor: 3.6 },
@@ -66,12 +66,12 @@ export const fuchsia: ThemeSet = {
       chroma: 0.004,
       chromaPerStep: 0.02,
       // ほぼ黒 / ほぼ白。真っ黒（文字がにじんで見えやすい）と真っ白（まぶしい）は避ける
-      // （0.18 / 0.995 から、比較用テーマで確認して採用）
+      // （0.18 / 0.995から、比較用テーマで確認して採用）
       editorL: { dark: 0.2, light: 0.985 },
       statusBorderChroma: 0.05,
     },
 
-    // Peony と同じ値（理由は src/palettes/peony.ts を参照）
+    // Peonyと同じ値（理由はsrc/palettes/peony.tsを参照）
     blur: {
       opacity: 0.94,
       overlay: {

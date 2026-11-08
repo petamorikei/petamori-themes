@@ -1,10 +1,10 @@
 // 比較用テーマを生成する。今の配色をベースラインとして、一部を書き換えた案を並べる。
-// 使い方: bun run variants → themes/<テーマの id>-variants.json（git の管理外）
+// 使い方: bun run variants → themes/<テーマのid>-variants.json（gitの管理外）
 //
 // 進め方:
-// 1. 下の SET に対象のテーマの id を、experiments に案を書き、bun run variants を実行する。
-// 2. Zed で `zed: rebuild dev extension` を実行し、テーマセレクターで無印のテーマ（ベースライン）と見比べる。
-// 3. 採用する案が決まったら src/palettes/<id>.ts に反映し、experiments を空に戻す
+// 1. 下のSETに対象のテーマのidを、experimentsに案を書き、bun run variantsを実行する。
+// 2. Zedで`zed: rebuild dev extension`を実行し、テーマセレクターで無印のテーマ（ベースライン）と見比べる。
+// 3. 採用する案が決まったらsrc/palettes/<id>.tsに反映し、experimentsを空に戻す
 //    （空なら比較用テーマのファイルは消える）。
 import { unlink } from "node:fs/promises";
 import { Glob } from "bun";
@@ -15,7 +15,7 @@ import type { Mode, Palette } from "./engine/palette.ts";
 import type { Style, Theme } from "./engine/theme.ts";
 import { themeSets } from "./palettes/index.ts";
 
-/** 対象のテーマの id（src/palettes/index.ts に登録したもの） */
+/** 対象のテーマのid（src/palettes/index.tsに登録したもの） */
 const SET = "peony";
 
 type Target = "opaque" | "blur";
@@ -32,7 +32,7 @@ interface Experiment {
 }
 
 // 案の書き方の例:
-//   { label: "A 背景の彩度", apply: (p) => { p.surface.chroma = 0.026; } },
+//   { label: "A背景の彩度", apply: (p) => { p.surface.chroma = 0.026; } },
 //   ブラー版で試すとき: { label: "...", apply: (p) => { p.blur.overlay.dark["tab_bar.background"] = ["background", 0]; }, targets: ["blur"] },
 //   ダークだけで試すとき: { label: "...", apply: (p) => { p.tiers.accent.apca = 55; }, modes: ["dark"] },
 const experiments: Experiment[] = [];
@@ -42,13 +42,13 @@ const experiments: Experiment[] = [];
 if (experiments.length === 0) {
   for (const path of new Glob("themes/*-variants.json").scanSync()) {
     await unlink(path);
-    console.log(`案がないので ${path} を消しました`);
+    console.log(`案がないので${path}を消しました`);
   }
   process.exit(0);
 }
 
 const set = themeSets.find((s) => s.id === SET);
-if (!set) throw new Error(`テーマ ${SET} が src/palettes/index.ts にない`);
+if (!set) throw new Error(`テーマ${SET}がsrc/palettes/index.tsにない`);
 const out = `themes/${set.id}-variants.json`;
 
 const build = (target: Target, p: Palette): Theme[] => (target === "blur" ? buildBlurred(set, p) : buildOpaque(set, p));
@@ -78,7 +78,7 @@ for (const e of experiments) {
       const label = `${baseTheme.name} [${e.label}]`;
       themes.push({ ...theme, name: label });
 
-      // ベースラインとの差（OKLab の ΔE ×100。アルファだけが変わったものも数える）
+      // ベースラインとの差（OKLabのΔE ×100。アルファだけが変わったものも数える）
       const base = colors(baseTheme.style);
       const cur = colors(theme.style);
       const changed = [...base].flatMap(([k, v]) => {
@@ -89,10 +89,10 @@ for (const e of experiments) {
       const mean = changed.reduce((s, { d }) => s + d, 0) / Math.max(1, changed.length);
       const keys = [...new Set([...sample, ...changed.slice(0, 4).map(({ k }) => k)])];
       const examples = keys.map((k) => `${k} ${base.get(k)}→${cur.get(k)}`).join(", ");
-      console.log(`${label}: ${changed.length} 色が変化（平均 ΔE ${mean.toFixed(1)}）\n  ${examples}`);
+      console.log(`${label}: ${changed.length}色が変化（平均ΔE ${mean.toFixed(1)}）\n  ${examples}`);
     }
   }
 }
 
 await writeFamily(out, `${set.family} Variants`, themes);
-console.log(`\n${out} を生成しました（${themes.length} テーマ）`);
+console.log(`\n${out}を生成しました（${themes.length}テーマ）`);

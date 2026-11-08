@@ -1,13 +1,13 @@
 // Berry: キャンバスそのものをピンクにする配色。
-// 規則の説明は src/engine/palette.ts を参照。
+// 規則の説明はsrc/engine/palette.tsを参照。
 //
-// - 背景: Dusk は深いベリー色、Dawn は桜色の紙。Peony の背景の約4倍の彩度
-//   （暗い色と、白から少し下げた明るさは、sRGB で出せる彩度に余裕がある）
+// - 背景: Duskは深いベリー色、Dawnは桜色の紙。Peonyの背景の約4倍の彩度
+//   （暗い色と、白から少し下げた明るさは、sRGBで出せる彩度に余裕がある）
 // - 本文のグレーもピンク寄りにする
 // - ほかの色: ピンクに近い暖色（ピーチ、ゴールド、ローズ）とラベンダー・ライラックでまとめ、文字列だけミント
-// - error: keyword（0°）と関数（55°）の間のオレンジ寄り（36°）。どちらからも色差 10 以上離れる
-// 段階（コントラストの目標値）、ターミナルの倍率、ブラー版の重ね方は、Peony と同じ値にしている
-// （Peony を変えても追従しないよう、値を書き写している）。
+// - error: keyword（0°）と関数（55°）の間のオレンジ寄り（36°）。どちらからも色差10以上離れる
+// 段階（コントラストの目標値）、ターミナルの倍率、ブラー版の重ね方は、Peonyと同じ値にしている
+// （Peonyを変えても追従しないよう、値を書き写している）。
 import type { ThemeSet } from "../engine/palette.ts";
 
 const BERRY = 350;
@@ -25,9 +25,9 @@ export const berry: ThemeSet = {
     },
 
     roles: {
-      neutral: { h: BERRY, c: 0.05 }, // ピンク寄りのグレー（Peony は 0.027）
+      neutral: { h: BERRY, c: 0.05 }, // ピンク寄りのグレー（Peonyは0.027）
       // 背景（350°）と同じ色相だと、ピンクの文字が背景に溶け込むので、コーラル寄りにずらす
-      // （355° / 356° から、比較用テーマで確認して採用）
+      // （355° / 356°から、比較用テーマで確認して採用）
       accent: { h: 0, c: 0.2 },
       keyword: { h: 0, c: 0.2 },
       activeLineNumber: { h: 355, c: 0.1 },
@@ -43,11 +43,11 @@ export const berry: ThemeSet = {
       link: { h: 175, c: 0.08 },
       vcsAdded: { h: 160, c: 0.12 },
       vcsModified: { h: 88, c: 0.1 },
-      // オレンジ寄り。27° から、keyword と関数の両方との色差を比較用テーマで確認して採用
+      // オレンジ寄り。27°から、keywordと関数の両方との色差を比較用テーマで確認して採用
       error: { h: 36, c: 0.19 },
     },
 
-    // Peony と同じ値（各段階の意味は src/palettes/peony.ts を参照）
+    // Peonyと同じ値（各段階の意味はsrc/palettes/peony.tsを参照）
     tiers: {
       strong: { apca: 90, wcag: 13, floor: 7.5 },
       body: { apca: 81, wcag: 11.2, floor: 6 },
@@ -62,16 +62,16 @@ export const berry: ThemeSet = {
 
     surface: {
       hue: BERRY,
-      chroma: 0.06, // Peony は 0.016
+      chroma: 0.06, // Peonyは0.016
       chromaPerStep: 0.12,
-      // Dawn は白から少し下げて、ピンクの色味を乗せられるようにする（Peony は 0.97）
+      // Dawnは白から少し下げて、ピンクの色味を乗せられるようにする（Peonyは0.97）
       editorL: { dark: 0.24, light: 0.95 },
       statusBorderChroma: 0.07,
     },
 
-    // 重ね方は Peony と同じ値（理由は src/palettes/peony.ts を参照）
+    // 重ね方はPeonyと同じ値（理由はsrc/palettes/peony.tsを参照）
     blur: {
-      // 88〜96% を比較用テーマで見比べて決めた
+      // 88〜96%を比較用テーマで見比べて決めた
       opacity: 0.94,
       overlay: {
         dark: {

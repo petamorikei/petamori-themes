@@ -1,4 +1,4 @@
-// src/palettes/index.ts に登録したテーマを、それぞれ themes/<id>.json と themes/<id>-blur.json に書き出す
+// src/palettes/index.tsに登録したテーマを、それぞれthemes/<id>.jsonとthemes/<id>-blur.jsonに書き出す
 // 使い方: bun run build
 import { buildBlurred, buildOpaque, writeFamily } from "./engine/family.ts";
 import { gamutNotes } from "./engine/theme.ts";

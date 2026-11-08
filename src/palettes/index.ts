@@ -1,4 +1,4 @@
-// 拡張機能に含めるテーマの一覧。テーマを増やすときは src/palettes/<名前>.ts を作り、ここに足す。
+// 拡張機能に含めるテーマの一覧。テーマを増やすときはsrc/palettes/<名前>.tsを作り、ここに足す。
 import type { ThemeSet } from "../engine/palette.ts";
 import { berry } from "./berry.ts";
 import { fuchsia } from "./fuchsia.ts";
