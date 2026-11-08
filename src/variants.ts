@@ -11,7 +11,7 @@ import { Glob } from "bun";
 import { differenceEuclidean } from "culori";
 import { alphaOf } from "./engine/color.ts";
 import { buildBlurred, buildOpaque, writeFamily } from "./engine/family.ts";
-import type { Palette } from "./engine/palette.ts";
+import type { Mode, Palette } from "./engine/palette.ts";
 import type { Style, Theme } from "./engine/theme.ts";
 import { themeSets } from "./palettes/index.ts";
 
@@ -27,11 +27,14 @@ interface Experiment {
   apply: (p: Palette) => void;
   /** どの版で作るか（省略時は不透明版だけ） */
   targets?: Target[];
+  /** ダークとライトのどちらで作るか（省略時は両方） */
+  modes?: Mode[];
 }
 
 // 案の書き方の例:
 //   { label: "A 背景の彩度", apply: (p) => { p.surface.chroma = 0.026; } },
 //   ブラー版で試すとき: { label: "...", apply: (p) => { p.blur.overlay.dark["tab_bar.background"] = ["background", 0]; }, targets: ["blur"] },
+//   ダークだけで試すとき: { label: "...", apply: (p) => { p.tiers.accent.apca = 55; }, modes: ["dark"] },
 const experiments: Experiment[] = [];
 
 // ---------------------------------------------------------------
@@ -71,6 +74,7 @@ for (const e of experiments) {
     for (const [i, theme] of build(target, p).entries()) {
       const baseTheme = baseline[i];
       if (!baseTheme) continue;
+      if (e.modes && !e.modes.includes(theme.appearance)) continue;
       const label = `${baseTheme.name} [${e.label}]`;
       themes.push({ ...theme, name: label });
 
