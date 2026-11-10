@@ -142,7 +142,7 @@ MIT（`LICENSE`）。
 
 ## Zedで公開するときの注意
 
-- リポジトリは<https://github.com/petamorikei/zed-themes>。`zed/extension.toml`の`repository`に書いてあり、Extensionsページでリポジトリへのリンクとして表示される。
+- リポジトリは<https://github.com/petamorikei/petamori-themes>。`zed/extension.toml`の`repository`に書いてあり、Extensionsページでリポジトリへのリンクとして表示される。
 - `zed/extension.toml`の`authors`にメールアドレスが入っている。公開すると表示される。
 - 公開したあとは、エクステンションidは変えられない。
 - 登録の手順: `zed-industries/extensions`をforkし、このリポジトリを`extensions/petamori-themes`にsubmoduleとして追加して、`extensions.toml`に`[petamori-themes]`（`submodule`、`path = "zed"`、`version`）を足してPRを出す。詳しくはZedの公式ドキュメント（Publishing Extensions）を参照。

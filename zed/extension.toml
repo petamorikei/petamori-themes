@@ -4,4 +4,4 @@ version = "0.1.0"
 schema_version = 1
 authors = ["kei <petamorikei@gmail.com>"]
 description = "A collection of color themes by Petamori."
-repository = "https://github.com/petamorikei/zed-themes"
+repository = "https://github.com/petamorikei/petamori-themes"
