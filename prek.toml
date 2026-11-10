@@ -11,4 +11,8 @@ hooks = [
 repo = "local"
 hooks = [
   { id = "biome-check", name = "biome check", entry = "bunx biome check --write --no-errors-on-unmatched", language = "system", types_or = ["javascript", "ts", "json"] },
+  # 生成し忘れの検査。テーマを生成し直して、コミットする内容と同じかを確かめる（コントラストの検査より先に動かす）
+  { id = "check-generated", name = "check generated themes", entry = "bun run check:generated", language = "system", pass_filenames = false, files = "^(src/|zed/|vscode/)" },
+  # テーマのコントラストの総当たり検査。配色・生成の処理・生成されたテーマのどれかが変わったときに動かす
+  { id = "check-theme", name = "check theme contrast", entry = "bun run check:theme", language = "system", pass_filenames = false, files = "^(src/|zed/themes/|vscode/themes/)" },
 ]

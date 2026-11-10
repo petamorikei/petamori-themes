@@ -1,7 +1,10 @@
 // 配色（Palette）の規則から、Zedのテーマ1つ分のstyleを組み立てる。
-// どのキーにどの役割・段階を使うかはここで決め、すべてのテーマで共通にする。
-import { hexOklch, oklchHex, solveInk, withAlpha } from "../../engine/color.ts";
-import type { Mode, Palette, Role, Tier } from "../../engine/palette.ts";
+// 色の計算はsrc/engine/resolve.ts、どのキーにどの色を使うかはここで決める（すべてのテーマで共通）。
+// UIのキーにはUIの文字の色（r.ui）、コードのキーにはコードの文字の色（r.inks）を使う。
+import type { Mode, Palette } from "../../engine/palette.ts";
+import { type AnsiName, type ResolveOptions, resolveColors } from "../../engine/resolve.ts";
+
+export { gamutNotes } from "../../engine/resolve.ts";
 
 export interface SyntaxStyle {
   color: string;
@@ -20,100 +23,20 @@ export interface Theme {
   style: Style;
 }
 
-export interface BuildOptions {
-  /** WCAG 2の最低ラインを確かめる背景。省略時はエディタの背景だけ（ブラー版では壁紙に重ねた色を渡す） */
-  floorBgs?: readonly string[];
-}
-
-/** 生成した色の彩度が、指定より大きく下がったもの（sRGBに収まらなかったもの）を記録する */
-export const gamutNotes: string[] = [];
+export type BuildOptions = ResolveOptions;
 
 export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions = {}): Style => {
-  const { config, roles, tiers, surface, terminal } = palette;
-  const dark = mode === "dark";
-  const editorL = surface.editorL[mode];
-  const editorBg = oklchHex(editorL, surface.chroma, surface.hue);
-  const floorBgs = options.floorBgs ?? [editorBg];
-
-  // ---- 文字の色 ----
-  const cache = new Map<string, string>();
-  /** scale: 段階の目標値にかける倍率（ターミナルのbright / dim用）。floor: WCAG 2の最低ラインを段階の値から変える */
-  const ink = (role: Role, tier: Tier, opts: { scale?: number; floor?: number } = {}): string => {
-    const scale = opts.scale ?? 1;
-    const floor = opts.floor ?? tiers[tier].floor;
-    const key = `${role}/${tier}/${scale}/${floor}`;
-    const hit = cache.get(key);
-    if (hit) return hit;
-    const { h, c } = roles[role];
-    const chroma = dark ? c : Math.min(c * config.lightChromaScale, config.lightChromaMax);
-    const hex = solveInk({
-      hue: h,
-      chroma,
-      target: tiers[tier][config.metric] * scale,
-      metric: config.metric,
-      bg: editorBg,
-      direction: dark ? "up" : "down",
-      floor,
-      floorBgs,
-    });
-    cache.set(key, hex);
-    const got = hexOklch(hex).c;
-    if (chroma - got > 0.005) {
-      gamutNotes.push(`${mode} ${role}/${tier}: 彩度${chroma.toFixed(3)} → ${got.toFixed(3)}（sRGBに収まらないため）`);
-    }
-    return hex;
-  };
-
-  // ---- 背景と枠線 ----
-  /** abs: 両テーマで同じ向きにずらす / fg: 文字に近づく向きにずらす */
-  const surf = (offset: number, kind: "abs" | "fg", hue: number = surface.hue, chroma?: number): string => {
-    const l = editorL + (kind === "abs" ? offset : dark ? offset : -offset);
-    const c = chroma ?? surface.chroma + (kind === "fg" ? Math.abs(offset) * surface.chromaPerStep : 0);
-    return oklchHex(l, c, hue);
-  };
-
-  // ---- 半透明 ----
-  const scale = dark ? 1 : config.lightOverlayScale;
-  const tint = (hex: string, alpha: number): string => withAlpha(hex, alpha * scale);
+  const r = resolveColors(palette, mode, options);
+  const { tint, statusBorder, editorBg } = r;
   const CLEAR = "#00000000";
 
-  // 背景の段差
-  const chrome = surf(-0.05, "abs"); // タイトルバー、ステータスバー、ウィンドウ全体
-  const panel = surf(-0.03, "abs"); // パネル、タブバー
-  const elevated = surf(0.02, "abs"); // ポップアップ、コマンドパレット
-  const elementBg = surf(0.03, "fg");
-  const subheader = surf(0.025, "fg");
-  const highlighted = surf(0.05, "fg");
-  const hover = surf(0.065, "fg");
-  const muted = surf(0.08, "fg"); // 無効な枠線
-  const active = surf(0.105, "fg");
-  const border = surf(0.125, "fg");
-  const strongLine = surf(0.15, "fg"); // 不可視文字、アクティブなインデントガイド
-  const trackBorder = surf(0.02, "fg");
-
-  // 文字
-  const text = ink("neutral", "strong");
-  const fg = ink("neutral", "body");
-  const textMuted = ink("neutral", "muted");
-  const placeholder = ink("neutral", "faint");
-  const disabled = ink("neutral", "disabled");
-  const accent = ink("accent", "accent");
-  const keyword = ink("keyword", "accent");
-  const fn = ink("function", "primary");
-  const type = ink("type", "accent");
-  const string = ink("string", "primary");
-  const number = ink("number", "primary");
-  const enumC = ink("enum", "primary");
-  const link = ink("link", "primary");
-  // errorは彩度がとても高く明るく見えるので、mutedの段階まで下げる
-  const error = ink("error", "muted");
-  const hint = ink("hint", "muted");
-  const comment = ink("neutral", "faint");
-  const predictive = ink("neutral", "faint");
-  const vcsAdded = ink("vcsAdded", "accent", { floor: 4.5 });
-
-  // 状態色の枠線: 役割の色相で、背景からborderと同じだけ離す。グレー系の状態はふつうの枠線を使う
-  const statusBorder = (role: Role): string => surf(0.125, "fg", roles[role].h, surface.statusBorderChroma);
+  const { chrome, panel, elevated, elementBg, subheader, highlighted, hover, muted, active, border, strongLine } =
+    r.surfaces;
+  const { trackBorder, selectedBorder } = r.surfaces;
+  // コードの文字
+  const c = r.inks;
+  // UIの文字
+  const u = r.ui;
 
   const status = (name: string, color: string, borderColor: string): Style => ({
     [name]: color,
@@ -121,53 +44,35 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     [`${name}.border`]: borderColor,
   });
 
-  // ANSIのblack / whiteは「blackは暗い、whiteは明るい」の意味どおりにする
-  const ansiBW = dark
-    ? {
-        black: hover,
-        bright_black: ink("neutral", "faint"),
-        dim_black: elevated,
-        white: fg,
-        bright_white: text,
-        dim_white: ink("neutral", "subtle", { floor: 0 }),
-      }
-    : {
-        black: text,
-        bright_black: ink("neutral", "faint"),
-        dim_black: textMuted,
-        white: border,
-        bright_white: elevated,
-        dim_white: disabled,
-      };
+  const ansi = (name: AnsiName): Style => {
+    const a = r.ansiColor(name);
+    return {
+      [`terminal.ansi.${name}`]: a.normal,
+      [`terminal.ansi.bright_${name}`]: a.bright,
+      [`terminal.ansi.dim_${name}`]: a.dim,
+    };
+  };
 
-  // ANSIの色: 通常はシンタックスと同じ段階。brightとdimは、その目標値に倍率をかける
-  // （Dawnではbrightのほうが背景から遠い＝暗くなる）
-  const ansi = (name: string, role: Role, tier: Tier): Style => ({
-    [`terminal.ansi.${name}`]: ink(role, tier),
-    [`terminal.ansi.bright_${name}`]: ink(role, tier, { scale: terminal.brightScale }),
-    [`terminal.ansi.dim_${name}`]: ink(role, tier, { scale: terminal.dimScale, floor: 0 }),
-  });
-
-  const playerColors = [accent, fn, type, link, enumC, number, string, error];
+  const playerColors = [c.accent, c.function, c.type, c.link, c.enum, c.number, c.string, c.error];
 
   const s = (color: string, extra: Omit<SyntaxStyle, "color"> = {}): SyntaxStyle => ({ color, ...extra });
   const italic = { font_style: "italic" } as const;
   const bold = { font_weight: 700 } as const;
 
   return {
-    accents: [accent, type, enumC, link, string, number, fn],
+    accents: [c.accent, c.type, c.enum, c.link, c.string, c.number, c.function],
 
     border,
     "border.variant": hover,
-    "border.focused": ink("accent", "muted", { floor: 3 }),
-    "border.selected": surf(0.15, "fg", roles.accent.h, 0.05),
+    "border.focused": u.focusBorder,
+    "border.selected": selectedBorder,
     "border.transparent": CLEAR,
     "border.disabled": muted,
 
     background: chrome,
     "surface.background": panel,
     "elevated_surface.background": elevated,
-    "drop_target.background": tint(accent, 0.2),
+    "drop_target.background": tint(c.accent, 0.2),
 
     "element.background": elementBg,
     "element.hover": hover,
@@ -180,17 +85,17 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     "ghost_element.selected": active,
     "ghost_element.disabled": elementBg,
 
-    text,
-    "text.muted": textMuted,
-    "text.placeholder": placeholder,
-    "text.disabled": disabled,
-    "text.accent": accent,
-    icon: text,
-    "icon.muted": textMuted,
-    "icon.disabled": disabled,
-    "icon.placeholder": textMuted,
-    "icon.accent": accent,
-    "link_text.hover": accent,
+    text: u.text,
+    "text.muted": u.textMuted,
+    "text.placeholder": u.placeholder,
+    "text.disabled": u.disabled,
+    "text.accent": u.accent,
+    icon: u.text,
+    "icon.muted": u.textMuted,
+    "icon.disabled": u.disabled,
+    "icon.placeholder": u.textMuted,
+    "icon.accent": u.accent,
+    "link_text.hover": u.accent,
 
     "title_bar.background": chrome,
     "title_bar.inactive_background": panel,
@@ -206,127 +111,126 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     "panel.overlay_hover": hover,
     "panel.indent_guide": hover,
     "panel.indent_guide_active": strongLine,
-    "panel.indent_guide_hover": disabled,
+    "panel.indent_guide_hover": u.disabled,
     "pane.focused_border": null,
     "pane_group.border": hover,
 
-    "search.match_background": tint(accent, 0.25),
-    "search.active_match_background": tint(number, 0.35),
+    "search.match_background": tint(c.accent, 0.25),
+    "search.active_match_background": tint(c.number, 0.25),
 
-    "scrollbar.thumb.background": tint(fg, 0.2),
+    "scrollbar.thumb.background": tint(c.fg, 0.2),
     "scrollbar.thumb.hover_background": border,
     "scrollbar.thumb.border": hover,
     "scrollbar.track.background": CLEAR,
     "scrollbar.track.border": trackBorder,
 
-    "editor.foreground": fg,
+    "editor.foreground": c.fg,
     "editor.background": editorBg,
     "editor.gutter.background": editorBg,
     "editor.subheader.background": subheader,
-    "editor.active_line.background": tint(hover, 0.6),
+    "editor.active_line.background": r.activeLine,
     "editor.highlighted_line.background": highlighted,
-    "editor.line_number": ink("neutral", "faint"),
-    "editor.active_line_number": ink("activeLineNumber", "primary"),
-    "editor.hover_line_number": textMuted,
+    "editor.line_number": c.placeholder,
+    "editor.active_line_number": c.activeLineNumber,
+    "editor.hover_line_number": c.textMuted,
     "editor.invisible": strongLine,
-    "editor.wrap_guide": tint(accent, 0.05),
-    "editor.active_wrap_guide": tint(accent, 0.1),
+    "editor.wrap_guide": tint(c.accent, 0.05),
+    "editor.active_wrap_guide": tint(c.accent, 0.1),
     "editor.indent_guide": hover,
     "editor.indent_guide_active": strongLine,
-    "editor.document_highlight.read_background": tint(accent, 0.12),
-    "editor.document_highlight.write_background": tint(type, 0.2),
-    "editor.document_highlight.bracket_background": tint(accent, 0.15),
+    "editor.document_highlight.read_background": tint(c.accent, 0.12),
+    "editor.document_highlight.write_background": tint(c.type, 0.2),
+    "editor.document_highlight.bracket_background": tint(c.accent, 0.15),
 
     "terminal.background": editorBg,
-    "terminal.foreground": fg,
-    "terminal.bright_foreground": text,
-    "terminal.dim_foreground": placeholder,
-    "terminal.ansi.black": ansiBW.black,
-    "terminal.ansi.bright_black": ansiBW.bright_black,
-    "terminal.ansi.dim_black": ansiBW.dim_black,
-    ...ansi("red", "error", "muted"),
-    ...ansi("green", "string", "primary"),
-    ...ansi("yellow", "number", "primary"),
-    ...ansi("blue", "enum", "primary"),
-    ...ansi("magenta", "accent", "accent"),
-    ...ansi("cyan", "link", "primary"),
-    "terminal.ansi.white": ansiBW.white,
-    "terminal.ansi.bright_white": ansiBW.bright_white,
-    "terminal.ansi.dim_white": ansiBW.dim_white,
+    "terminal.foreground": r.terminalInks.fg,
+    "terminal.bright_foreground": r.terminalInks.brightFg,
+    "terminal.dim_foreground": r.terminalInks.dimFg,
+    "terminal.ansi.black": r.ansiBW.black,
+    "terminal.ansi.bright_black": r.ansiBW.brightBlack,
+    "terminal.ansi.dim_black": r.ansiBW.dimBlack,
+    ...ansi("red"),
+    ...ansi("green"),
+    ...ansi("yellow"),
+    ...ansi("blue"),
+    ...ansi("magenta"),
+    ...ansi("cyan"),
+    "terminal.ansi.white": r.ansiBW.white,
+    "terminal.ansi.bright_white": r.ansiBW.brightWhite,
+    "terminal.ansi.dim_white": r.ansiBW.dimWhite,
 
-    // ガターの印は面積が小さいので彩度を残したい。accentの段階にして、Dawnで暗くなりすぎないようfloorは4.5にする
-    "version_control.added": vcsAdded,
-    "version_control.modified": ink("vcsModified", "accent", { floor: 4.5 }),
-    "version_control.deleted": error,
-    "version_control.word_added": tint(vcsAdded, 0.2),
-    "version_control.word_deleted": tint(error, 0.25),
-    "version_control.conflict_marker.ours": tint(string, 0.1),
-    "version_control.conflict_marker.theirs": tint(enumC, 0.1),
+    "version_control.added": u.vcsAdded,
+    "version_control.modified": u.vcsModified,
+    "version_control.deleted": u.error,
+    "version_control.word_added": tint(c.vcsAdded, 0.2),
+    "version_control.word_deleted": tint(c.error, 0.25),
+    "version_control.conflict_marker.ours": tint(c.string, 0.1),
+    "version_control.conflict_marker.theirs": tint(c.enum, 0.1),
 
-    ...status("conflict", fn, statusBorder("function")),
-    ...status("created", string, statusBorder("string")),
-    ...status("deleted", error, statusBorder("error")),
-    ...status("error", error, statusBorder("error")),
-    ...status("hidden", placeholder, muted),
-    ...status("hint", hint, statusBorder("hint")),
-    ...status("ignored", placeholder, border),
-    ...status("info", enumC, statusBorder("enum")),
-    ...status("modified", number, statusBorder("number")),
-    ...status("predictive", predictive, muted),
-    ...status("renamed", enumC, statusBorder("enum")),
-    ...status("success", string, statusBorder("string")),
-    ...status("unreachable", textMuted, border),
-    ...status("warning", number, statusBorder("number")),
+    ...status("conflict", u.conflict, statusBorder("function")),
+    ...status("created", u.success, statusBorder("string")),
+    ...status("deleted", u.error, statusBorder("error")),
+    ...status("error", u.error, statusBorder("error")),
+    ...status("hidden", u.placeholder, muted),
+    ...status("hint", u.hint, statusBorder("hint")),
+    ...status("ignored", u.placeholder, border),
+    ...status("info", u.info, statusBorder("enum")),
+    ...status("modified", u.warning, statusBorder("number")),
+    ...status("predictive", u.placeholder, muted),
+    ...status("renamed", u.info, statusBorder("enum")),
+    ...status("success", u.success, statusBorder("string")),
+    ...status("unreachable", u.textMuted, border),
+    ...status("warning", u.warning, statusBorder("number")),
 
-    players: playerColors.map((c) => ({ cursor: c, background: c, selection: tint(c, 0.24) })),
+    players: playerColors.map((p) => ({ cursor: p, background: p, selection: tint(p, 0.24) })),
 
     syntax: {
-      attribute: s(type),
-      boolean: s(number),
-      comment: s(comment, italic),
-      "comment.doc": s(ink("neutral", "subtle"), italic),
-      constant: s(number),
-      constructor: s(fn),
-      "diff.minus": s(error),
-      "diff.plus": s(string),
-      embedded: s(fg),
-      emphasis: s(accent, italic),
-      "emphasis.strong": s(number, bold),
-      enum: s(enumC),
-      function: s(fn),
-      hint: s(hint),
-      keyword: s(keyword),
-      label: s(enumC),
-      link_text: s(enumC, italic),
-      link_uri: s(link),
-      namespace: s(ink("neutral", "primary")),
-      number: s(number),
-      operator: s(ink("operator", "muted")),
-      predictive: s(predictive, italic),
-      preproc: s(type),
-      primary: s(fg),
-      property: s(ink("property", "primary")),
-      punctuation: s(textMuted),
-      "punctuation.bracket": s(textMuted),
-      "punctuation.delimiter": s(textMuted),
-      "punctuation.list_marker": s(keyword),
-      "punctuation.markup": s(keyword),
-      "punctuation.special": s(fn),
-      selector: s(number),
-      "selector.pseudo": s(type),
-      string: s(string),
-      "string.escape": s(keyword),
-      "string.regex": s(number),
-      "string.special": s(number),
-      "string.special.symbol": s(enumC),
-      tag: s(keyword),
-      "text.literal": s(string),
-      title: s(accent, bold),
-      type: s(type),
-      variable: s(fg),
-      "variable.parameter": s(ink("parameter", "primary")),
-      "variable.special": s(keyword, italic),
-      variant: s(enumC),
+      attribute: s(c.type),
+      boolean: s(c.number),
+      comment: s(c.comment, italic),
+      "comment.doc": s(c.commentDoc, italic),
+      constant: s(c.number),
+      constructor: s(c.function),
+      "diff.minus": s(c.error),
+      "diff.plus": s(c.string),
+      embedded: s(c.fg),
+      emphasis: s(c.accent, italic),
+      "emphasis.strong": s(c.number, bold),
+      enum: s(c.enum),
+      function: s(c.function),
+      hint: s(c.hint),
+      keyword: s(c.keyword),
+      label: s(c.enum),
+      link_text: s(c.enum, italic),
+      link_uri: s(c.link),
+      namespace: s(c.namespace),
+      number: s(c.number),
+      operator: s(c.operator),
+      predictive: s(c.predictive, italic),
+      preproc: s(c.type),
+      primary: s(c.fg),
+      property: s(c.property),
+      punctuation: s(c.textMuted),
+      "punctuation.bracket": s(c.textMuted),
+      "punctuation.delimiter": s(c.textMuted),
+      "punctuation.list_marker": s(c.keyword),
+      "punctuation.markup": s(c.keyword),
+      "punctuation.special": s(c.function),
+      selector: s(c.number),
+      "selector.pseudo": s(c.type),
+      string: s(c.string),
+      "string.escape": s(c.keyword),
+      "string.regex": s(c.number),
+      "string.special": s(c.number),
+      "string.special.symbol": s(c.enum),
+      tag: s(c.keyword),
+      "text.literal": s(c.string),
+      title: s(c.accent, bold),
+      type: s(c.type),
+      variable: s(c.fg),
+      "variable.parameter": s(c.parameter),
+      "variable.special": s(c.keyword, italic),
+      variant: s(c.enum),
     },
   };
 };

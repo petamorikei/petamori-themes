@@ -35,3 +35,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # 比較用テーマ（bun run variantsが生成する）
 zed/themes/*-variants.json
+
+# VS Codeの拡張機能のパッケージ（bun run package:vscodeが生成する）
+*.vsix

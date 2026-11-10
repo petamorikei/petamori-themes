@@ -1,100 +1,62 @@
-// テーマの簡易チェック: WCAG 2のコントラスト比（合否の判定）とAPCAのLc（参考）、Oneテーマとのキー差分
-// 使い方: bun run check:theme [テーマJSON(省略時はzed/themes/*.json全部)] [one.json(任意)]
-// 透過テーマ（background.appearanceがopaque以外）は、半透明のbackgroundを
-// 黒い壁紙と白い壁紙それぞれに重ねた色で計算し、悪いほうの値を表示する。
+// テーマのコントラストの検査（Zed版とVS Code版のすべてのテーマ）。
+// すべての色のキーを「文字」「背景」「対象外」のどれかに分類し、文字が乗りうる背景との組み合わせを総当たりで測る。
+// 分類の規則はsrc/targets/<エディタ>/contrast.ts。分類されていないキーがあれば失敗にする。
+// 使い方: bun run check:theme [--one <Zedの公式テーマOneのJSON>]（--oneを付けると、Oneにあって未定義のキーも表示する）
 import { Glob } from "bun";
-import { apca, hexOklch, over, wcag } from "./engine/color.ts";
+import type { MatrixResult } from "./engine/contrast.ts";
+import { checkVscodeTheme } from "./targets/vscode/contrast.ts";
+import type { VscodeTheme } from "./targets/vscode/theme.ts";
+import { checkZedTheme } from "./targets/zed/contrast.ts";
 import type { SyntaxStyle, Theme } from "./targets/zed/theme.ts";
 
 interface Family {
   themes: Theme[];
 }
 
-const themePaths = process.argv[2] ? [process.argv[2]] : [...new Glob("zed/themes/*.json").scanSync()].sort();
-const refPath = process.argv[3];
-
-// 低コントラストを意図的に許容するもの（目標3:1）
-const SOFT = new Set([
-  "syntax.comment",
-  "syntax.comment.doc",
-  "syntax.predictive",
-  "syntax.hint",
-  "editor.line_number",
-  "terminal.ansi.bright_black",
-  "terminal.dim_foreground",
-]);
-// 背景に近い色であることが前提のもの（チェック対象外）
-const SKIP = /^terminal\.ansi\.(dim_|black$|white$|bright_white$)/;
-
-const color = (v: unknown): string | undefined => (typeof v === "string" && v.startsWith("#") ? v : undefined);
-
 let failed = 0;
-for (const themePath of themePaths) {
-  const family = (await Bun.file(themePath).json()) as Family;
-  for (const t of family.themes) {
-    const s = t.style;
-    const translucent = (s["background.appearance"] ?? "opaque") !== "opaque";
-    const background = color(s.background);
-    const editorBg = color(s["editor.background"]);
-    if (!background || !editorBg) throw new Error(`${t.name}: backgroundかeditor.backgroundがない`);
-    // 比較に使う背景（透過テーマは黒壁紙・白壁紙の2通り）
-    const bgs = translucent ? [over(background, "#000000"), over(background, "#ffffff")] : [editorBg];
-    const syntax = (s.syntax ?? {}) as Record<string, SyntaxStyle>;
-    const items: [string, string | undefined][] = [
-      ...["text", "editor.foreground", "text.muted", "text.accent", "editor.line_number"].map(
-        (k): [string, string | undefined] => [k, color(s[k])],
-      ),
-      ...["error", "warning", "success", "info"].map((k): [string, string | undefined] => [k, color(s[k])]),
-      ...Object.entries(syntax).map(([k, v]): [string, string | undefined] => [`syntax.${k}`, v.color]),
-      ...Object.entries(s)
-        .filter(([k]) => (k.startsWith("terminal.ansi.") || k === "terminal.dim_foreground") && !SKIP.test(k))
-        .map(([k, v]): [string, string | undefined] => [k, color(v)]),
-    ];
-    console.log(`\n== ${t.name} (bg ${bgs.join(" / ")}${translucent ? " ※黒壁紙/白壁紙で悪いほう" : ""}) ==`);
-    console.log("     WCAG       APCA");
-    for (const [k, v] of items) {
-      if (!v) {
-        failed++;
-        // 「FAIL」のあとのスペースは、検査結果の列の区切り
-        console.log(`FAIL 色がない: ${k}`);
-        continue;
-      }
-      const r = Math.min(...bgs.map((b) => wcag(v, b)));
-      const lc = Math.min(...bgs.map((b) => apca(v, b)));
-      const need = SOFT.has(k) ? 3 : 4.5;
-      const ok = r >= need;
-      if (!ok) failed++;
-      console.log(
-        `${ok ? "OK  " : "FAIL"} ${r.toFixed(2).padStart(5)} (>=${need}) Lc${lc.toFixed(0).padStart(4)}  ${k} ${v}`,
-      );
-    }
-    // ピンクのアクセントとerrorの見分けやすさ（色同士のコントラストとOKLCHの色相差）
-    const accent = color(s["text.accent"]);
-    const error = color(s.error);
-    if (accent && error) {
-      const dh = Math.abs(hexOklch(accent).h - hexOklch(error).h);
-      console.log(
-        `accent vs error: 色相差${Math.min(dh, 360 - dh).toFixed(0)}°, contrast ${wcag(accent, error).toFixed(2)}`,
-      );
-    }
-  }
+const report = (name: string, r: MatrixResult): void => {
+  const bad = r.failures.length + r.unclassified.length;
+  failed += bad;
+  console.log(`${bad ? "FAIL" : "OK  "} ${name}（${r.checked}組）`);
+  for (const f of r.failures) console.log(`       ${f}`);
+  if (r.unclassified.length) console.log(`       分類されていないキー: ${r.unclassified.join(", ")}`);
+};
 
-  if (refPath) {
-    const ref = ((await Bun.file(refPath).json()) as Family).themes[0]?.style;
-    if (!ref) throw new Error(`${refPath}にテーマがない`);
-    const refSyntax = (ref.syntax ?? {}) as Record<string, SyntaxStyle>;
-    for (const t of family.themes) {
-      const keys = new Set(Object.keys(t.style));
-      const synKeys = new Set(Object.keys((t.style.syntax ?? {}) as Record<string, SyntaxStyle>));
-      const missing = [
-        ...Object.keys(ref).filter((k) => !keys.has(k)),
-        ...Object.keys(refSyntax)
-          .filter((k) => !synKeys.has(k))
-          .map((k) => `syntax.${k}`),
-      ];
-      console.log(`\n${t.name}: Oneにあって未定義のキー: ${missing.join(", ") || "なし"}`);
-    }
+console.log("== Zed ==");
+const zedFamilies: Family[] = [];
+for (const path of [...new Glob("zed/themes/*.json").scanSync()].sort()) {
+  if (path.endsWith("-variants.json")) continue;
+  const family = (await Bun.file(path).json()) as Family;
+  zedFamilies.push(family);
+  for (const t of family.themes) report(t.name, checkZedTheme(t));
+}
+
+console.log("\n== VS Code ==");
+for (const path of [...new Glob("vscode/themes/*.json").scanSync()].sort()) {
+  const theme = (await Bun.file(path).json()) as VscodeTheme;
+  report(theme.name, checkVscodeTheme(theme));
+}
+
+// ---- Zedの公式テーマOneとのキーの差分（任意） ----
+const oneIndex = process.argv.indexOf("--one");
+const onePath = oneIndex >= 0 ? process.argv[oneIndex + 1] : undefined;
+if (onePath) {
+  const ref = ((await Bun.file(onePath).json()) as Family).themes[0]?.style;
+  if (!ref) throw new Error(`${onePath}にテーマがない`);
+  const refSyntax = (ref.syntax ?? {}) as Record<string, SyntaxStyle>;
+  console.log("\n== Oneにあって未定義のキー ==");
+  for (const t of zedFamilies.flatMap((f) => f.themes)) {
+    const keys = new Set(Object.keys(t.style));
+    const synKeys = new Set(Object.keys((t.style.syntax ?? {}) as Record<string, SyntaxStyle>));
+    const missing = [
+      ...Object.keys(ref).filter((k) => !keys.has(k)),
+      ...Object.keys(refSyntax)
+        .filter((k) => !synKeys.has(k))
+        .map((k) => `syntax.${k}`),
+    ];
+    console.log(`${t.name}: ${missing.join(", ") || "なし"}`);
   }
 }
 
+console.log(failed ? `\n失敗 ${failed}件` : "\nすべて合格");
 process.exitCode = failed ? 1 : 0;

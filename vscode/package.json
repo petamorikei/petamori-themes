@@ -1,0 +1,59 @@
+{
+  "name": "petamori-themes",
+  "displayName": "Petamori Themes",
+  "description": "A collection of color themes by Petamori.",
+  "version": "0.1.0",
+  "publisher": "petamori",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/petamorikei/petamori-themes"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "keywords": [
+    "theme",
+    "color-theme",
+    "dark",
+    "light",
+    "pink"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Peony Dusk",
+        "uiTheme": "vs-dark",
+        "path": "./themes/peony-dusk-color-theme.json"
+      },
+      {
+        "label": "Peony Dawn",
+        "uiTheme": "vs",
+        "path": "./themes/peony-dawn-color-theme.json"
+      },
+      {
+        "label": "Fuchsia Dusk",
+        "uiTheme": "vs-dark",
+        "path": "./themes/fuchsia-dusk-color-theme.json"
+      },
+      {
+        "label": "Fuchsia Dawn",
+        "uiTheme": "vs",
+        "path": "./themes/fuchsia-dawn-color-theme.json"
+      },
+      {
+        "label": "Berry Dusk",
+        "uiTheme": "vs-dark",
+        "path": "./themes/berry-dusk-color-theme.json"
+      },
+      {
+        "label": "Berry Dawn",
+        "uiTheme": "vs",
+        "path": "./themes/berry-dawn-color-theme.json"
+      }
+    ]
+  }
+}

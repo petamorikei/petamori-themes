@@ -2,13 +2,14 @@
 
 Petamoriのエディタ用テーマのセット。配色（`src/palettes/`）と色の計算（`src/engine/`）はエディタに依存せず、エディタごとの対応付けと書き出しを`src/targets/<エディタ>/`に置く。
 
-| エディタ | 拡張機能のディレクトリ | 備考                                                                              |
-| -------- | ---------------------- | --------------------------------------------------------------------------------- |
-| Zed      | `zed/`                 | エクステンション形式（`extension.toml` + `themes/*.json`）。idは`petamori-themes` |
+| エディタ | 拡張機能のディレクトリ | 備考                                                                                                                                    |
+| -------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Zed      | `zed/`                 | エクステンション形式（`extension.toml` + `themes/*.json`）。idは`petamori-themes`                                                       |
+| VS Code  | `vscode/`              | カラーテーマの拡張機能（`package.json` + `themes/*-color-theme.json`）。ブラー版はない（VS Codeにウィンドウを透過させる機能がないため） |
 
 ## 収録しているテーマ
 
-どのテーマも、Dusk（dark）、Dawn（light）と、それぞれのBlur（ぼかし）の4つがある。
+どのテーマも、Dusk（dark）、Dawn（light）がある。Zed版には、それぞれのBlur（ぼかし）もある。
 
 | テーマ  | 配色                                                                                                                             | ファイル                  |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
@@ -26,6 +27,13 @@ zed/                    # Zedの拡張機能。登録ではpath = "zed"。拡張
   themes/               # 生成されるファイル。直接編集しない
     <id>.json           # Dusk / Dawn（例: peony.json）
     <id>-blur.json      # Dusk Blur / Dawn Blur（例: peony-blur.json）
+vscode/                 # VS Codeの拡張機能
+  package.json          # 生成されるファイル。直接編集しない（元はsrc/targets/vscode/extension.tsのMANIFEST）
+  README.md             # Marketplaceのページになる（英語）
+  LICENSE               # ../LICENSEへのシンボリックリンク
+  .vscodeignore
+  themes/               # 生成されるファイル。直接編集しない
+    <テーマ名>-color-theme.json  # 例: peony-dusk-color-theme.json
 src/
   palettes/             # 配色（エディタに依存しない）
     index.ts            # 含めるテーマの一覧
@@ -34,12 +42,19 @@ src/
     berry.ts
   engine/               # 色の計算（エディタに依存しない）
     palette.ts          # 配色の型（役割、段階など）と規則の説明
+    resolve.ts          # 配色から、テーマ1つ分の具体的な色（文字、背景の段差、半透明、ANSI）を計算する
+    contrast.ts         # コントラストの総当たり検査の共通部分
     color.ts            # OKLCH、APCA、WCAG 2、半透明色の合成、明度の計算
   targets/
     zed/                # Zed向け
-      theme.ts          # 配色から、テーマ1つ分のstyleを組み立てる（どのキーにどの役割を使うか）
+      theme.ts          # 計算した色を、Zedのキーに割り当てる
       blur.ts           # ブラー版の組み立て
       family.ts         # ダーク・ライトとブラー版をまとめて組み立て、JSONに書き出す
+      contrast.ts       # Zedのキーの分類の規則（検査用）
+    vscode/             # VS Code向け
+      theme.ts          # 計算した色を、VS CodeのUIの色・TextMateのスコープ・セマンティックトークンに割り当てる
+      extension.ts      # テーマのファイルとpackage.jsonを書き出す
+      contrast.ts       # VS Codeのキーの分類の規則（検査用）
   build.ts              # bun run build
   check.ts              # bun run check:theme
   variants.ts           # bun run variants
@@ -51,19 +66,26 @@ src/
 
 ```bash
 bun install
-bun run build         # 登録したテーマをzed/themes/<id>.jsonとzed/themes/<id>-blur.jsonに書き出す（biomeで整形まで行う）
-bun run check:theme   # コントラストの検査（Oneとのキーの差分は: bun src/check.ts zed/themes/peony.json <one.json>）
-bun run variants      # 比較用テーマを生成する（下の「色の調整の進め方」）
+bun run build           # 登録したテーマを、Zed版（zed/themes/）とVS Code版（vscode/themes/、vscode/package.json）に書き出す
+bun run check:theme     # コントラストの総当たり検査（Zed版とVS Code版。Oneとのキーの差分は: bun run check:theme --one <one.json>）
+bun run variants        # 比較用テーマを生成する（Zed版のみ。下の「色の調整の進め方」）
+bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<version>.vsixを作る
 ```
+
+### VS Code版を手元で試す
+
+- `.vsix`を入れる: `bun run package:vscode`のあと、`code --install-extension vscode/petamori-themes-0.1.0.vsix`を実行するか、VS Codeのコマンドパレットで「Extensions: Install from VSIX...」を選ぶ。色を変えたら作り直して、もう一度入れる。
+- 開発用のウィンドウで開く: `code --extensionDevelopmentPath="$PWD/vscode"`。インストールせずに試せる。色を変えたら`bun run build`のあと、開発用のウィンドウで「Developer: Reload Window」を実行する。
+- テーマの切り替え: コマンドパレットの「Preferences: Color Theme」（`cmd-k cmd-t`）で、上下キーで見比べられる。
 
 ## テーマを増やすとき
 
 1. `src/palettes/<名前>.ts`を作る。`peony.ts`と同じく`ThemeSet`（id、ファミリー名、ダーク・ライトのテーマ名、配色）を定義する。
 2. `src/palettes/index.ts`の`themeSets`に足す。
-3. `bun run build`を実行すると、`zed/themes/<id>.json`と`zed/themes/<id>-blur.json`ができる。
-4. `zed/extension.toml`の`version`を上げる（例: 0.1.0 → 0.2.0）。
+3. `bun run build`を実行すると、Zed版（`zed/themes/<id>.json`、`zed/themes/<id>-blur.json`）とVS Code版（`vscode/themes/`、`vscode/package.json`の`contributes.themes`）ができる。
+4. `zed/extension.toml`と、`src/targets/vscode/extension.ts`の`MANIFEST.version`を上げる（例: 0.1.0 → 0.2.0）。
 
-どのキーにどの役割・段階を使うか（Zedでは`src/targets/zed/theme.ts`）は、すべてのテーマで共通。テーマごとに変えるのは、役割ごとの色相と彩度、段階の目標値、背景の明度などの値だけ。
+どのキーにどの役割・段階を使うか（`src/targets/<エディタ>/theme.ts`）は、すべてのテーマで共通。テーマごとに変えるのは、役割ごとの色相と彩度、段階の目標値、背景の明度などの値だけ。
 
 ## 開発ループ
 
@@ -96,6 +118,11 @@ bun run variants      # 比較用テーマを生成する（下の「色の調�
   - 明度Lは、エディタの背景とのコントラストが段階の目標値になるように自動で計算する。目標値はAPCAのLc（PeonyではDuskの平均から決めた）。
   - ライトの彩度はダークの`lightChromaScale`倍（上限`lightChromaMax`）。sRGBに収まらないときはLとHを保ったまま彩度を下げる（`bun run build`が一覧を出す）。
   - 段階ごとにWCAG 2の最低ライン（floor）があり、届かないときはさらに背景から離す。明るい背景ではAPCAの中間の値がWCAG 2では低く出るため、ライトでは主要の段階より下は実際にはfloorで決まる。floorを段階ごとにずらしているのは、段階の差が潰れないようにするため。
+  - 文字の色は、乗る可能性のあるすべての背景の上で最低ラインを満たすように計算する（`src/engine/resolve.ts`）。エディタの背景では段階のfloorを、その上に重なる背景ではWCAG 2の最低ライン（本文や記号は4.5:1、コメントなど控えめな文字は3:1、無効な要素は2.5:1）を満たす。
+    - コードの文字（`inks`）: エディタの背景と現在行のハイライト
+    - UIの文字（`ui`）: 上に加えて、タイトルバー・パネル・ポップアップ・入力欄・hover・選択の背景（ライトではこれらがエディタより暗いので、UIの控えめな文字はコードの同じ段階の文字より少し濃くなる）
+    - ターミナルの文字: エディタの背景だけ
+    - 一時的なハイライト（検索結果、選択範囲、差分など）は計算に含めず、検査で確かめる
   - ターミナルのbright / dimは、通常色の目標値に`terminal.brightScale` / `dimScale`倍をかける（ライトではbrightのほうが暗くなる）。
 - **背景と枠線** = エディタの背景からの明度の差。タイトルバー < パネル < エディタ < ポップアップは両テーマで同じ向き、hoverや枠線は文字に近づく向き（ダークは明るく、ライトは暗く）にずらす。
 - **半透明の色**（選択範囲、検索結果など）= 文字や背景の色にアルファを付けたもの。ライトはアルファを`lightOverlayScale`倍にする。
@@ -112,11 +139,28 @@ bun run variants      # 比較用テーマを生成する（下の「色の調�
 - タイトルバーとステータスバーは、不透明度を`background`と自動で揃える（下の「`background`の範囲」のため）。
 - 文字色の最低ラインは、半透明の`background`を黒い壁紙と白い壁紙のそれぞれに重ねた色で確かめ、足りなければ自動で最小限だけ背景から離す。
 
-### 視認性の基準（`src/check.ts`）
+### 視認性の検査（`bun run check:theme`）
 
-- 本文、シンタックス、ターミナルの色: WCAG 2で4.5:1以上
-- comment、行番号、predictive、hint、`bright_black`: 3:1以上
-- ブラー版は、黒い壁紙と白い壁紙に重ねたときの悪いほうで判定する。
+テーマのすべての色のキーを、規則（`src/targets/<エディタ>/contrast.ts`）で次のどれかに分類し、「文字の種類 × その文字が乗りうる背景の種類」の組み合わせを総当たりで測る。
+
+- **文字**（最低ラインつき）: コードの文字、ガターの文字（行番号など）、UIの文字、ターミナルの文字
+- **背景**: エディタの背景、エディタに常に重なる背景（現在行など）、UIの背景、一時的なハイライト
+- **対象外**（理由つき）: 枠線、ガイド、カーソル、スクロールバーなど
+
+| 文字の種類       | 測る背景                                       |
+| ---------------- | ---------------------------------------------- |
+| コードの文字     | エディタの背景、現在行など、一時的なハイライト |
+| ガターの文字     | エディタの背景、現在行など                     |
+| UIの文字         | エディタの背景、現在行など、UIの背景           |
+| ターミナルの文字 | エディタの背景                                 |
+
+- 最低ライン: 本文や記号は4.5:1、コメント・行番号・プレースホルダーなど控えめな文字は3:1、アイコン（文字ではない）は3:1、無効な要素は2.5:1。
+- 一時的なハイライトの上では、本文と同じ段階の文字に3:1を求める（ハイライトの上の文字について規格の定めはないため。控えめな文字は、エディタの背景の上でちょうど3:1になるように作っているので、ハイライトが重なれば必ず下回る。これは測らない）。
+- VS Codeで、アクセントの色で塗りつぶす背景（ボタン、バッジなど）は、上に乗る文字が決まっているので1対1で測る。
+- ブラー版は、半透明の背景を黒い壁紙と白い壁紙に重ねたときの悪いほうで判定する。
+- **分類されていないキーがあれば、検査は失敗する**。テーマに新しいキーを足したら、分類の規則にも足す。
+- コミットするときに、pre-commitのフック（`prek.toml`の`check-theme`）がこの検査を自動で実行する。`src/`、`zed/themes/`、`vscode/themes/`のどれかが変わったときに動き、失敗するとコミットできない。
+- その前に、生成し忘れの検査（`check-generated`、`bun run check:generated`）も動く。テーマを生成し直して、結果がコミットする内容と違えば失敗する（配色を変えたのに`bun run build`を忘れた場合など）。生成し直したファイルは作業ツリーに残るので、確認して`git add`してからコミットし直す。
 
 ## Zedの仕様について調べて分かったこと
 

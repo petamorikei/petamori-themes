@@ -5,7 +5,9 @@
     "check": "biome check --write .",
     "build": "bun src/build.ts",
     "check:theme": "bun src/check.ts",
+    "check:generated": "bun src/check-generated.ts",
     "variants": "bun src/variants.ts",
+    "package:vscode": "bun run build && cd vscode && bunx @vscode/vsce@3 package --no-dependencies",
     "prepare": "mise exec -- prek install"
   },
   "devDependencies": {
