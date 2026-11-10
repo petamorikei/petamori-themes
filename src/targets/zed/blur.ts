@@ -2,8 +2,8 @@
 //
 // 方針: 色を乗せるのはウィンドウ全体の"background"だけにして、その上の層は透明にする
 // （半透明を何層も重ねると濃さがまばらになるため）。パネルなどの階層は、低いアルファで重ねて出す。
-import { over, withAlpha } from "./color.ts";
-import type { Mode, Palette } from "./palette.ts";
+import { over, withAlpha } from "../../engine/color.ts";
+import type { Mode, Palette } from "../../engine/palette.ts";
 import { buildStyle, type Style, type Theme } from "./theme.ts";
 
 const CLEAR = "#00000000";

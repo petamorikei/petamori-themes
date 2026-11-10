@@ -34,4 +34,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 
 # 比較用テーマ（bun run variantsが生成する）
-themes/*-variants.json
+zed/themes/*-variants.json

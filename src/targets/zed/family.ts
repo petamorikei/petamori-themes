@@ -1,7 +1,7 @@
 // テーマファミリー（ダーク・ライトとそれぞれのブラー版）の組み立てと、JSONへの書き出し
 import { $ } from "bun";
+import type { Mode, Palette, ThemeSet } from "../../engine/palette.ts";
 import { buildBlurTheme } from "./blur.ts";
-import type { Mode, Palette, ThemeSet } from "./palette.ts";
 import { buildStyle, type Theme } from "./theme.ts";
 
 const SCHEMA = "https://zed.dev/schema/themes/v0.2.0.json";

@@ -10,7 +10,7 @@ import type { Metric } from "./color.ts";
 
 export type Mode = "dark" | "light";
 
-/** 色の役割。theme.tsがどのキーにどの役割を使うかを決める */
+/** 色の役割。各エディタ向けの対応付け（src/targets/<エディタ>/）が、どのキーにどの役割を使うかを決める */
 export type Role =
   /** 文字や背景の基本色（グレー） */
   | "neutral"
@@ -92,7 +92,7 @@ export interface Palette {
 
 /** 1つのテーマファミリー（ダークとライト、それぞれのブラー版を生成する） */
 export interface ThemeSet {
-  /** ファイル名に使う（themes/<id>.json、themes/<id>-blur.json） */
+  /** ファイル名に使う（zed/themes/<id>.json、zed/themes/<id>-blur.json） */
   id: string;
   /** テーマファミリーの名前（ブラー版は末尾に" Blur"を付ける） */
   family: string;

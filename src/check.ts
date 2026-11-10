@@ -1,16 +1,16 @@
 // テーマの簡易チェック: WCAG 2のコントラスト比（合否の判定）とAPCAのLc（参考）、Oneテーマとのキー差分
-// 使い方: bun run check:theme [テーマJSON(省略時はthemes/*.json全部)] [one.json(任意)]
+// 使い方: bun run check:theme [テーマJSON(省略時はzed/themes/*.json全部)] [one.json(任意)]
 // 透過テーマ（background.appearanceがopaque以外）は、半透明のbackgroundを
 // 黒い壁紙と白い壁紙それぞれに重ねた色で計算し、悪いほうの値を表示する。
 import { Glob } from "bun";
 import { apca, hexOklch, over, wcag } from "./engine/color.ts";
-import type { SyntaxStyle, Theme } from "./engine/theme.ts";
+import type { SyntaxStyle, Theme } from "./targets/zed/theme.ts";
 
 interface Family {
   themes: Theme[];
 }
 
-const themePaths = process.argv[2] ? [process.argv[2]] : [...new Glob("themes/*.json").scanSync()].sort();
+const themePaths = process.argv[2] ? [process.argv[2]] : [...new Glob("zed/themes/*.json").scanSync()].sort();
 const refPath = process.argv[3];
 
 // 低コントラストを意図的に許容するもの（目標3:1）

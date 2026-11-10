@@ -1,5 +1,5 @@
 // 比較用テーマを生成する。今の配色をベースラインとして、一部を書き換えた案を並べる。
-// 使い方: bun run variants → themes/<テーマのid>-variants.json（gitの管理外）
+// 使い方: bun run variants → zed/themes/<テーマのid>-variants.json（gitの管理外）
 //
 // 進め方:
 // 1. 下のSETに対象のテーマのidを、experimentsに案を書き、bun run variantsを実行する。
@@ -10,10 +10,10 @@ import { unlink } from "node:fs/promises";
 import { Glob } from "bun";
 import { differenceEuclidean } from "culori";
 import { alphaOf } from "./engine/color.ts";
-import { buildBlurred, buildOpaque, writeFamily } from "./engine/family.ts";
 import type { Mode, Palette } from "./engine/palette.ts";
-import type { Style, Theme } from "./engine/theme.ts";
 import { themeSets } from "./palettes/index.ts";
+import { buildBlurred, buildOpaque, writeFamily } from "./targets/zed/family.ts";
+import type { Style, Theme } from "./targets/zed/theme.ts";
 
 /** 対象のテーマのid（src/palettes/index.tsに登録したもの） */
 const SET = "peony";
@@ -40,7 +40,7 @@ const experiments: Experiment[] = [];
 // ---------------------------------------------------------------
 
 if (experiments.length === 0) {
-  for (const path of new Glob("themes/*-variants.json").scanSync()) {
+  for (const path of new Glob("zed/themes/*-variants.json").scanSync()) {
     await unlink(path);
     console.log(`案がないので${path}を消しました`);
   }
@@ -49,7 +49,7 @@ if (experiments.length === 0) {
 
 const set = themeSets.find((s) => s.id === SET);
 if (!set) throw new Error(`テーマ${SET}がsrc/palettes/index.tsにない`);
-const out = `themes/${set.id}-variants.json`;
+const out = `zed/themes/${set.id}-variants.json`;
 
 const build = (target: Target, p: Palette): Theme[] => (target === "blur" ? buildBlurred(set, p) : buildOpaque(set, p));
 

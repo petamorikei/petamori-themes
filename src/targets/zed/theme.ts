@@ -1,7 +1,7 @@
 // 配色（Palette）の規則から、Zedのテーマ1つ分のstyleを組み立てる。
 // どのキーにどの役割・段階を使うかはここで決め、すべてのテーマで共通にする。
-import { hexOklch, oklchHex, solveInk, withAlpha } from "./color.ts";
-import type { Mode, Palette, Role, Tier } from "./palette.ts";
+import { hexOklch, oklchHex, solveInk, withAlpha } from "../../engine/color.ts";
+import type { Mode, Palette, Role, Tier } from "../../engine/palette.ts";
 
 export interface SyntaxStyle {
   color: string;

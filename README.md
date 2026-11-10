@@ -1,6 +1,10 @@
 # Petamori Themes
 
-PetamoriのZed用テーマのセット。Zedのエクステンション形式（`extension.toml` + `themes/*.json`）で、エクステンションidは`petamori-themes`。
+Petamoriのエディタ用テーマのセット。配色（`src/palettes/`）と色の計算（`src/engine/`）はエディタに依存せず、エディタごとの対応付けと書き出しを`src/targets/<エディタ>/`に置く。
+
+| エディタ | 拡張機能のディレクトリ | 備考                                                                              |
+| -------- | ---------------------- | --------------------------------------------------------------------------------- |
+| Zed      | `zed/`                 | エクステンション形式（`extension.toml` + `themes/*.json`）。idは`petamori-themes` |
 
 ## 収録しているテーマ
 
@@ -15,33 +19,40 @@ PetamoriのZed用テーマのセット。Zedのエクステンション形式（
 ## 構成
 
 ```
-extension.toml
-themes/                 # 生成されるファイル。直接編集しない
-  <id>.json             # Dusk / Dawn（例: peony.json）
-  <id>-blur.json        # Dusk Blur / Dawn Blur（例: peony-blur.json）
+LICENSE
+zed/                    # Zedの拡張機能。登録ではpath = "zed"。拡張機能に必要なものだけを置く
+  extension.toml
+  LICENSE               # ../LICENSEへのシンボリックリンク（Zedの規則で、拡張機能のディレクトリに必要）
+  themes/               # 生成されるファイル。直接編集しない
+    <id>.json           # Dusk / Dawn（例: peony.json）
+    <id>-blur.json      # Dusk Blur / Dawn Blur（例: peony-blur.json）
 src/
-  palettes/
-    index.ts            # 拡張機能に含めるテーマの一覧
+  palettes/             # 配色（エディタに依存しない）
+    index.ts            # 含めるテーマの一覧
     peony.ts            # 各テーマの配色。色を変えるときはここを編集する
     fuchsia.ts
     berry.ts
-  engine/               # テーマに依存しない部分
+  engine/               # 色の計算（エディタに依存しない）
     palette.ts          # 配色の型（役割、段階など）と規則の説明
-    theme.ts            # 配色から、テーマ1つ分のstyleを組み立てる（どのキーにどの役割を使うか）
-    blur.ts             # ブラー版の組み立て
-    family.ts           # ダーク・ライトとブラー版をまとめて組み立て、JSONに書き出す
     color.ts            # OKLCH、APCA、WCAG 2、半透明色の合成、明度の計算
+  targets/
+    zed/                # Zed向け
+      theme.ts          # 配色から、テーマ1つ分のstyleを組み立てる（どのキーにどの役割を使うか）
+      blur.ts           # ブラー版の組み立て
+      family.ts         # ダーク・ライトとブラー版をまとめて組み立て、JSONに書き出す
   build.ts              # bun run build
   check.ts              # bun run check:theme
   variants.ts           # bun run variants
 ```
 
+今の配色の型（`src/engine/palette.ts`）には、Zed専用の設定（ブラー版の重ね方。Zedのキー名で書かれている）が含まれている。ほかのエディタに対応するときに、エディタ別の設定として切り離す。
+
 ## 使い方
 
 ```bash
 bun install
-bun run build         # 登録したテーマをthemes/<id>.jsonとthemes/<id>-blur.jsonに書き出す（biomeで整形まで行う）
-bun run check:theme   # コントラストの検査（Oneとのキーの差分は: bun src/check.ts themes/peony.json <one.json>）
+bun run build         # 登録したテーマをzed/themes/<id>.jsonとzed/themes/<id>-blur.jsonに書き出す（biomeで整形まで行う）
+bun run check:theme   # コントラストの検査（Oneとのキーの差分は: bun src/check.ts zed/themes/peony.json <one.json>）
 bun run variants      # 比較用テーマを生成する（下の「色の調整の進め方」）
 ```
 
@@ -49,10 +60,10 @@ bun run variants      # 比較用テーマを生成する（下の「色の調�
 
 1. `src/palettes/<名前>.ts`を作る。`peony.ts`と同じく`ThemeSet`（id、ファミリー名、ダーク・ライトのテーマ名、配色）を定義する。
 2. `src/palettes/index.ts`の`themeSets`に足す。
-3. `bun run build`を実行すると、`themes/<id>.json`と`themes/<id>-blur.json`ができる。
-4. `extension.toml`の`version`を上げる（例: 0.1.0 → 0.2.0）。
+3. `bun run build`を実行すると、`zed/themes/<id>.json`と`zed/themes/<id>-blur.json`ができる。
+4. `zed/extension.toml`の`version`を上げる（例: 0.1.0 → 0.2.0）。
 
-どのキーにどの役割・段階を使うか（`src/engine/theme.ts`）は、すべてのテーマで共通。テーマごとに変えるのは、役割ごとの色相と彩度、段階の目標値、背景の明度などの値だけ。
+どのキーにどの役割・段階を使うか（Zedでは`src/targets/zed/theme.ts`）は、すべてのテーマで共通。テーマごとに変えるのは、役割ごとの色相と彩度、段階の目標値、背景の明度などの値だけ。
 
 ## 開発ループ
 
@@ -64,14 +75,14 @@ bun run variants      # 比較用テーマを生成する（下の「色の調�
 4. テーマセレクター（`cmd-k cmd-t`）で上下キーを押すと、その場で見た目が切り替わる。見比べるときに便利。
 5. 反映されないときは`zed: open log`でパースエラーを確認する。
 
-初めて読み込むときは、コマンドパレットで`zed: install dev extension`を実行し、このリポジトリを選ぶ。
+初めて読み込むときは、コマンドパレットで`zed: install dev extension`を実行し、このリポジトリの`zed/`ディレクトリを選ぶ。
 
 ### 色の調整の進め方（比較用テーマ）
 
 今のテーマをベースラインにして、一部を変えた案と見比べてから決める。
 
 1. `src/variants.ts`の`SET`に対象のテーマのidを、`experiments`に案を書く（配色の複製を書き換える関数）。ブラー版で試すときは`targets: ["blur"]`を付ける。
-2. `bun run variants`を実行する。`themes/<id>-variants.json`に「Peony Dusk [案の名前]」などのテーマができる。ベースラインから何色変わったか、平均の色差（OKLabのΔE ×100）、主な色の変化も表示する。このファイルはgitの管理外。
+2. `bun run variants`を実行する。`zed/themes/<id>-variants.json`に「Peony Dusk [案の名前]」などのテーマができる。ベースラインから何色変わったか、平均の色差（OKLabのΔE ×100）、主な色の変化も表示する。このファイルはgitの管理外。
 3. `zed: rebuild dev extension`を実行し、テーマセレクターで無印のテーマと見比べる。
 4. 決まったら`src/palettes/<id>.ts`に反映し、`experiments`を空にして`bun run build`と`bun run variants`を実行する（案が空なら比較用テーマのファイルは消える）。
 
@@ -129,9 +140,10 @@ bun run variants      # 比較用テーマを生成する（下の「色の調�
 
 MIT（`LICENSE`）。
 
-## 公開するときの注意
+## Zedで公開するときの注意
 
-- リポジトリは<https://github.com/petamorikei/zed-themes>。`extension.toml`の`repository`に書いてあり、Extensionsページでリポジトリへのリンクとして表示される。
-- `extension.toml`の`authors`にメールアドレスが入っている。公開すると表示される。
+- リポジトリは<https://github.com/petamorikei/zed-themes>。`zed/extension.toml`の`repository`に書いてあり、Extensionsページでリポジトリへのリンクとして表示される。
+- `zed/extension.toml`の`authors`にメールアドレスが入っている。公開すると表示される。
 - 公開したあとは、エクステンションidは変えられない。
-- 登録の手順: `zed-industries/extensions`をforkし、このリポジトリを`extensions/petamori-themes`にsubmoduleとして追加して、`extensions.toml`に`[petamori-themes]`（`submodule`と`version`）を足してPRを出す。詳しくはZedの公式ドキュメント（Publishing Extensions）を参照。
+- 登録の手順: `zed-industries/extensions`をforkし、このリポジトリを`extensions/petamori-themes`にsubmoduleとして追加して、`extensions.toml`に`[petamori-themes]`（`submodule`、`path = "zed"`、`version`）を足してPRを出す。詳しくはZedの公式ドキュメント（Publishing Extensions）を参照。
+- ライセンスは、拡張機能のディレクトリ（`zed/`）にある必要がある（リポジトリ直下だけでは認められない）。`zed/LICENSE`は直下の`LICENSE`へのシンボリックリンクで、公式ドキュメントでもこの方法が認められている。
