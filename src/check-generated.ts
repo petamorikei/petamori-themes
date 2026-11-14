@@ -3,7 +3,7 @@
 // 使い方: bun run check:generated（コミットするときはpre-commitのフックが自動で実行する）
 import { $ } from "bun";
 
-const GENERATED = ["zed/themes", "vscode/themes", "vscode/package.json"];
+const GENERATED = ["zed/themes", "vscode/themes", "vscode/package.json", "iterm2"];
 
 await $`bun src/build.ts`.quiet();
 

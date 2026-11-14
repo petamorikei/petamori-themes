@@ -2,14 +2,15 @@
 
 Petamoriのエディタ用テーマのセット。配色（`src/palettes/`）と色の計算（`src/engine/`）はエディタに依存せず、エディタごとの対応付けと書き出しを`src/targets/<エディタ>/`に置く。
 
-| エディタ | 拡張機能のディレクトリ | 備考                                                                                                                                    |
-| -------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Zed      | `zed/`                 | エクステンション形式（`extension.toml` + `themes/*.json`）。idは`petamori-themes`                                                       |
-| VS Code  | `vscode/`              | カラーテーマの拡張機能（`package.json` + `themes/*-color-theme.json`）。ブラー版はない（VS Codeにウィンドウを透過させる機能がないため） |
+| エディタ | 拡張機能のディレクトリ | 備考                                                                                                                                        |
+| -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zed      | `zed/`                 | エクステンション形式（`extension.toml` + `themes/*.json`）。idは`petamori-themes`                                                           |
+| VS Code  | `vscode/`              | カラーテーマの拡張機能（`package.json` + `themes/*-color-theme.json`）。ブラー版はない（VS Codeにウィンドウを透過させる機能がないため）     |
+| iTerm2   | `iterm2/`              | カラープリセット（`*.itermcolors`）。ターミナルの色だけ。ブラー版はない（透過とぼかしはプロファイルの設定で、プリセットには含まれないため） |
 
 ## 収録しているテーマ
 
-どのテーマも、Dusk（dark）、Dawn（light）がある。Zed版には、それぞれのBlur（ぼかし）もある。
+どのテーマも、Dusk（dark）、Dawn（light）がある。Zed版には、それぞれのBlur（ぼかし）もある。iTerm2版には、DuskとDawnを1つにまとめ、macOSの外観に合わせて切り替わるプリセットもある。
 
 | テーマ  | 配色                                                                                                                             | ファイル                  |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
@@ -34,6 +35,9 @@ vscode/                 # VS Codeの拡張機能
   .vscodeignore
   themes/               # 生成されるファイル。直接編集しない
     <テーマ名>-color-theme.json  # 例: peony-dusk-color-theme.json
+iterm2/                 # iTerm2のカラープリセット。生成されるファイル。直接編集しない
+  <テーマ名>.itermcolors      # Dusk / Dawnそれぞれ（例: Peony Dusk.itermcolors）。ファイル名がプリセットの名前になる
+  <ファミリー名>.itermcolors  # DuskとDawnの両方を持つ（例: Peony.itermcolors）
 src/
   palettes/             # 配色（エディタに依存しない）
     index.ts            # 含めるテーマの一覧
@@ -55,6 +59,10 @@ src/
       theme.ts          # 計算した色を、VS CodeのUIの色・TextMateのスコープ・セマンティックトークンに割り当てる
       extension.ts      # テーマのファイルとpackage.jsonを書き出す
       contrast.ts       # VS Codeのキーの分類の規則（検査用）
+    iterm2/             # iTerm2向け
+      theme.ts          # 計算した色を、iTerm2のプロファイルの色のキーに割り当てる
+      preset.ts         # .itermcolors（plist）の書き出しと読み込み
+      contrast.ts       # iTerm2のキーの分類の規則（検査用）
   build.ts              # bun run build
   check.ts              # bun run check:theme
   variants.ts           # bun run variants
@@ -66,8 +74,8 @@ src/
 
 ```bash
 bun install
-bun run build           # 登録したテーマを、Zed版（zed/themes/）とVS Code版（vscode/themes/、vscode/package.json）に書き出す
-bun run check:theme     # コントラストの総当たり検査（Zed版とVS Code版。Oneとのキーの差分は: bun run check:theme --one <one.json>）
+bun run build           # 登録したテーマを、Zed版（zed/themes/）、VS Code版（vscode/themes/、vscode/package.json）、iTerm2版（iterm2/）に書き出す
+bun run check:theme     # コントラストの総当たり検査（Zed版、VS Code版、iTerm2版。Oneとのキーの差分は: bun run check:theme --one <one.json>）
 bun run variants        # 比較用テーマを生成する（Zed版のみ。下の「色の調整の進め方」）
 bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<version>.vsixを作る
 ```
@@ -78,11 +86,20 @@ bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<ve
 - 開発用のウィンドウで開く: `code --extensionDevelopmentPath="$PWD/vscode"`。インストールせずに試せる。色を変えたら`bun run build`のあと、開発用のウィンドウで「Developer: Reload Window」を実行する。
 - テーマの切り替え: コマンドパレットの「Preferences: Color Theme」（`cmd-k cmd-t`）で、上下キーで見比べられる。
 
+### iTerm2版を使う
+
+- 取り込む: Settings → Profiles → Colorsの「Color Presets...」→「Import...」で、`iterm2/`の`.itermcolors`を選ぶ。Finderでファイルをダブルクリックしても取り込める。ファイル名（拡張子を除く）がプリセットの名前になる。
+- 当てる: 同じ「Color Presets...」の一覧から選ぶ。
+  - `Peony Dusk`など: 1つのモードだけのプリセット。
+  - `Peony`など（ファミリー名）: DuskとDawnの両方を持つプリセット。「Use separate colors for light and dark mode」がオフのプロファイルで選ぶと、両方のモードの色が入ってこの設定がオンになり、macOSの外観に合わせてDusk（ダーク）とDawn（ライト）が切り替わる。すでにオンなら、両方を更新するか（Update Both Modes）を聞かれる。
+- 色を変えたら: `bun run build`のあと、「Color Presets...」→「Delete Preset...」で古いプリセットを消してから取り込み直し、プリセットを選び直す。消さずに取り込むと、上書きされずに`Peony Dusk (2)`のような別の名前で増える。
+- 透過やぼかしは、Settings → Profiles → Windowの「Transparency」と「Blur」で設定する（プリセットには含まれない）。
+
 ## テーマを増やすとき
 
 1. `src/palettes/<名前>.ts`を作る。`peony.ts`と同じく`ThemeSet`（id、ファミリー名、ダーク・ライトのテーマ名、配色）を定義する。
 2. `src/palettes/index.ts`の`themeSets`に足す。
-3. `bun run build`を実行すると、Zed版（`zed/themes/<id>.json`、`zed/themes/<id>-blur.json`）とVS Code版（`vscode/themes/`、`vscode/package.json`の`contributes.themes`）ができる。
+3. `bun run build`を実行すると、Zed版（`zed/themes/<id>.json`、`zed/themes/<id>-blur.json`）、VS Code版（`vscode/themes/`、`vscode/package.json`の`contributes.themes`）、iTerm2版（`iterm2/<テーマ名>.itermcolors`、`iterm2/<ファミリー名>.itermcolors`）ができる。
 4. `zed/extension.toml`と、`src/targets/vscode/extension.ts`の`MANIFEST.version`を上げる（例: 0.1.0 → 0.2.0）。
 
 どのキーにどの役割・段階を使うか（`src/targets/<エディタ>/theme.ts`）は、すべてのテーマで共通。テーマごとに変えるのは、役割ごとの色相と彩度、段階の目標値、背景の明度などの値だけ。
@@ -157,9 +174,11 @@ bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<ve
 - 最低ライン: 本文や記号は4.5:1、コメント・行番号・プレースホルダーなど控えめな文字は3:1、アイコン（文字ではない）は3:1、無効な要素は2.5:1。
 - 一時的なハイライトの上では、本文と同じ段階の文字に3:1を求める（ハイライトの上の文字について規格の定めはないため。控えめな文字は、エディタの背景の上でちょうど3:1になるように作っているので、ハイライトが重なれば必ず下回る。これは測らない）。
 - VS Codeで、アクセントの色で塗りつぶす背景（ボタン、バッジなど）は、上に乗る文字が決まっているので1対1で測る。
+- iTerm2では、上に乗る文字が決まっている背景を1対1で測る。選択範囲（Selected Text ColorとSelection Color）、カーソル（Cursor Text ColorとCursor Color）、検索の一致箇所（Match Background Colorと、iTerm2がその明るさから選ぶ白か黒の文字）。
+- iTerm2の選択範囲（「Use Selected Text Color」をオフにしたとき）とカーソルのある行の帯（Cursor Guide Color。既定ではオフ）は一時的なハイライトとして扱い、本文と同じ段階のターミナルの文字に3:1を求める。ターミナルの文字はエディタの背景だけを基準に計算しているので、ライトでは帯の上で4.5:1を下回る（赤は4.1:1前後、bright blackは2.7:1前後）。
 - ブラー版は、半透明の背景を黒い壁紙と白い壁紙に重ねたときの悪いほうで判定する。
 - **分類されていないキーがあれば、検査は失敗する**。テーマに新しいキーを足したら、分類の規則にも足す。
-- コミットするときに、pre-commitのフック（`prek.toml`の`check-theme`）がこの検査を自動で実行する。`src/`、`zed/themes/`、`vscode/themes/`のどれかが変わったときに動き、失敗するとコミットできない。
+- コミットするときに、pre-commitのフック（`prek.toml`の`check-theme`）がこの検査を自動で実行する。`src/`、`zed/themes/`、`vscode/themes/`、`iterm2/`のどれかが変わったときに動き、失敗するとコミットできない。
 - その前に、生成し忘れの検査（`check-generated`、`bun run check:generated`）も動く。テーマを生成し直して、結果がコミットする内容と違えば失敗する（配色を変えたのに`bun run build`を忘れた場合など）。生成し直したファイルは作業ツリーに残るので、確認して`git add`してからコミットし直す。
 
 ## Zedの仕様について調べて分かったこと
@@ -179,6 +198,24 @@ bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<ve
 | タブバー                   | すべてのタブの下に全幅の枠線が1本ある。アクティブなタブは下の枠線を持たず、自分の背景でこの線を覆い隠す                                                                                          | `crates/ui/src/components/tab_bar.rs`、`tab.rs`       |
 | スティッキースクロールの行 | `panel.overlay_background` / `panel.overlay_hover`。省略すると、`panel.background`を不透明にした色が使われる                                                                                     | `crates/theme_settings/src/schema.rs`                 |
 | 既存テーマの部分上書き     | settings.jsonのトップレベルにある`theme_overrides`（テーマ名をキーにする）。`experimental.`は付かない                                                                                            | 公式ドキュメント                                      |
+
+## iTerm2の仕様について調べて分かったこと
+
+iTerm2 3.7.7の同梱プリセット（`/Applications/iTerm.app/Contents/Resources/ColorPresets.plist`）と、`gnachman/iTerm2`のソースで確かめた。
+
+| 事項                       | 内容                                                                                                                                                                                                       | 根拠                                                                                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| プリセットの名前           | 取り込んだファイルの名前から拡張子を除いたもの                                                                                                                                                             | `sources/Settings/iTermColorPresets.m`（`presetNameFromFilename`）                                                                        |
+| 同じ名前で取り込む         | 上書きされず、`<名前> (2)`のように番号が付く。中身がまったく同じなら、追加するかを聞かれる                                                                                                                 | `iTermColorPresets.m`（`addColorPreset:withColors:`）                                                                                     |
+| キーの一覧                 | Ansi 0〜15、Foreground、Background、Bold、Link、Match Background、Selection、Selected Text、Cursor、Cursor Text、Tab、Underline、Cursor Guide、Badge（それぞれ末尾に` Color`）。TabとUnderlineは省略できる | `iTermColorPresets.m`（`colorKeysWithModes:`）                                                                                            |
+| 色の書き方                 | 辞書に`Red` / `Green` / `Blue` / `Alpha Component`（0〜1）と`Color Space`（`sRGB`）。同梱のプリセットでアルファが1でないのはCursor Guide（0.25）とBadge（0.5）だけ                                         | `ColorPresets.plist`                                                                                                                      |
+| ライト・ダークの両方       | キーの末尾に` (Light)` / ` (Dark)`を付けたものを持つと、両方のモードを持つプリセットになる（Foreground Color (Light)があるかで判定）。末尾のないキーは、同梱のSolarizedではダークの色                      | `iTermColorPresets.m`（`iTermColorPresetHasModes`）、`ColorPresets.plist`                                                                 |
+| 両方を持つプリセットを選ぶ | 「Use separate colors for light and dark mode」がオフなら、両方のモードの色を入れてオンにする。オンなら、両方を更新するかを聞く                                                                            | `sources/Settings/ProfilesColorsPreferencesViewController.m`                                                                              |
+| dimの色                    | キーがない（iTerm2が計算する）                                                                                                                                                                             | `colorKeysWithModes:`                                                                                                                     |
+| 検索の一致箇所の文字       | 文字の色を使わず、Match Background Colorが暗ければ白、明るければ黒で描く（暗さは0.30R + 0.59G + 0.11B < 0.5）                                                                                              | `sources/Drawing/iTermTextDrawingHelper.m`（`iTermTextDrawingHelperTextColorForMatch`）、`sources/Categories/NSColor+iTerm.m`（`isDark`） |
+| 既定でオンの設定           | Use Selected Text Color（選択中の文字をSelected Text Colorで描く）、Use Bright Bold（太字をBold Colorで描く）。Use Cursor Guideは既定でオフ。Match Background Colorの既定は黄色                            | `sources/Settings/iTermProfilePreferences.m`                                                                                              |
+
+選択範囲と検索の一致箇所は、同梱のプリセットにならってアルファを1にし、半透明の色をエディタの背景に重ねた不透明の色で書き出している（iTerm2がこの2つのアルファをどう扱うかは確かめていない）。
 
 ## ライセンス
 

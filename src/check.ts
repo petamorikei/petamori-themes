@@ -1,9 +1,11 @@
-// テーマのコントラストの検査（Zed版とVS Code版のすべてのテーマ）。
+// テーマのコントラストの検査（Zed版、VS Code版、iTerm2版のすべてのテーマ）。
 // すべての色のキーを「文字」「背景」「対象外」のどれかに分類し、文字が乗りうる背景との組み合わせを総当たりで測る。
 // 分類の規則はsrc/targets/<エディタ>/contrast.ts。分類されていないキーがあれば失敗にする。
 // 使い方: bun run check:theme [--one <Zedの公式テーマOneのJSON>]（--oneを付けると、Oneにあって未定義のキーも表示する）
 import { Glob } from "bun";
 import type { MatrixResult } from "./engine/contrast.ts";
+import { checkItermColors } from "./targets/iterm2/contrast.ts";
+import { parsePlist, splitModes } from "./targets/iterm2/preset.ts";
 import { checkVscodeTheme } from "./targets/vscode/contrast.ts";
 import type { VscodeTheme } from "./targets/vscode/theme.ts";
 import { checkZedTheme } from "./targets/zed/contrast.ts";
@@ -35,6 +37,15 @@ console.log("\n== VS Code ==");
 for (const path of [...new Glob("vscode/themes/*.json").scanSync()].sort()) {
   const theme = (await Bun.file(path).json()) as VscodeTheme;
   report(theme.name, checkVscodeTheme(theme));
+}
+
+console.log("\n== iTerm2 ==");
+for (const path of [...new Glob("iterm2/*.itermcolors").scanSync()].sort()) {
+  const name = path.replace(/^iterm2\//, "").replace(/\.itermcolors$/, "");
+  // 両方のモードを持つプリセットは、末尾のないキー・(Dark)・(Light)をそれぞれ1つのモードとして測る
+  for (const { suffix, colors } of splitModes(parsePlist(await Bun.file(path).text()))) {
+    report(`${name}${suffix}`, checkItermColors(colors));
+  }
 }
 
 // ---- Zedの公式テーマOneとのキーの差分（任意） ----

@@ -94,9 +94,9 @@ export interface Palette {
 export interface ThemeSet {
   /** ファイル名に使う（zed/themes/<id>.json、zed/themes/<id>-blur.json） */
   id: string;
-  /** テーマファミリーの名前（ブラー版は末尾に" Blur"を付ける） */
+  /** テーマファミリーの名前（ブラー版は末尾に" Blur"を付ける）。iTerm2版の、両方のモードを持つプリセットの名前にも使う */
   family: string;
-  /** テーマセレクターに出る名前 */
+  /** テーマセレクターに出る名前。iTerm2版のプリセットの名前（ファイル名）にも使う */
   names: Record<Mode, string>;
   palette: Palette;
 }
