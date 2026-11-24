@@ -2,7 +2,7 @@
 //
 // 方針: 色を乗せるのはウィンドウ全体の"background"だけにして、その上の層は透明にする
 // （半透明を何層も重ねると濃さがまばらになるため）。パネルなどの階層は、低いアルファで重ねて出す。
-import { over, withAlpha } from "../../engine/color.ts";
+import { alphaOf, over, withAlpha } from "../../engine/color.ts";
 import type { Mode, Palette } from "../../engine/palette.ts";
 import { buildStyle, type Style, type Theme } from "./theme.ts";
 
@@ -22,6 +22,11 @@ const transparentKeys = [
 // タイトルバーとステータスバーは"background"を塗った領域の外側に描画される（Zedのworkspace.rsで別の要素）。
 // そのためbackgroundの透け具合が効かない。色は各バー用のものを使い、不透明度だけbackgroundに合わせる。
 const barKeys = ["title_bar.background", "title_bar.inactive_background", "status_bar.background"];
+// 診断（エラー・警告など）のホバーの枠は、透過テーマだとZedが土台のelevated_surface.backgroundを透明にして、
+// 重大度ごとの背景色だけで塗る（Zedのhover_popover.rsのDiagnosticPopover）。背景色は1割ほどの半透明なので、
+// そのままでは下のコードが透けて読みにくい。不透明版で土台に重ねて見える色を合成し、ほかのポップアップと同じ不透明度にする。
+// 同じキーはProject Diagnosticsの診断ブロックやボタンなどでも使われ、そちらも濃くなる（視認性を優先して受け入れた）
+const diagnosticKeys = ["error", "warning", "info", "hint", "ignored"].map((k) => `${k}.background`);
 
 const str = (style: Style, key: string): string => {
   const v = style[key];
@@ -55,5 +60,8 @@ export const buildBlurTheme = (palette: Palette, mode: Mode, name: string): Them
   for (const k of transparentKeys) style[k] = CLEAR;
   for (const [k, [source, alpha]] of Object.entries(overlay[mode])) style[k] = withAlpha(str(base, source), alpha);
   for (const k of barKeys) style[k] = withAlpha(str(base, k), opacity);
+  const elevated = str(base, "elevated_surface.background");
+  const elevatedAlpha = alphaOf(str(style, "elevated_surface.background"));
+  for (const k of diagnosticKeys) style[k] = withAlpha(over(str(base, k), elevated), elevatedAlpha);
   return { name, appearance: mode, style };
 };
