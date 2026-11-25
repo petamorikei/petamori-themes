@@ -90,11 +90,17 @@ export interface Palette {
   blur: { opacity: number; overlay: Record<Mode, Overlay> };
 }
 
-/** 1つのテーマファミリー（ダークとライト、それぞれのブラー版を生成する） */
+/**
+ * Italic版（飾りのイタリックを使う版）の名前に付ける語。無印版の名前の末尾に付ける（ブラー版では" Italic Blur"の順）。
+ * 色は無印版と同じなので、色を持つだけのiTerm2版にはない
+ */
+export const ITALIC_SUFFIX = " Italic";
+
+/** 1つのテーマファミリー（ダークとライト、それぞれのブラー版とItalic版を生成する） */
 export interface ThemeSet {
-  /** ファイル名に使う（zed/themes/<id>.json、zed/themes/<id>-blur.json） */
+  /** ファイル名に使う（zed/themes/<id>.json、zed/themes/<id>-blur.json、zed/themes/<id>-italic.jsonなど） */
   id: string;
-  /** テーマファミリーの名前（ブラー版は末尾に" Blur"を付ける）。iTerm2版の、両方のモードを持つプリセットの名前にも使う */
+  /** テーマファミリーの名前（ブラー版は末尾に" Blur"、Italic版は" Italic"を付ける）。iTerm2版の、両方のモードを持つプリセットの名前にも使う */
   family: string;
   /** テーマセレクターに出る名前。iTerm2版のプリセットの名前（ファイル名）にも使う */
   names: Record<Mode, string>;

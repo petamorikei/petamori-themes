@@ -23,7 +23,13 @@ export interface Theme {
   style: Style;
 }
 
-export type BuildOptions = ResolveOptions;
+export interface BuildOptions extends ResolveOptions {
+  /**
+   * 飾りのイタリック（コメント、ドキュメントコメント、self / this、リンクの文字、予測の候補）を使うか。
+   * trueでItalic版、省略時は無印版。Markdownの強調（emphasis）は書いた人が斜体にした部分なので、どちらでもイタリック
+   */
+  italic?: boolean;
+}
 
 export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions = {}): Style => {
   const r = resolveColors(palette, mode, options);
@@ -57,6 +63,8 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
 
   const s = (color: string, extra: Omit<SyntaxStyle, "color"> = {}): SyntaxStyle => ({ color, ...extra });
   const italic = { font_style: "italic" } as const;
+  /** 飾りのイタリック。Italic版だけで付ける */
+  const deco = options.italic ? italic : {};
   const bold = { font_weight: 700 } as const;
 
   return {
@@ -187,8 +195,8 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
     syntax: {
       attribute: s(c.type),
       boolean: s(c.number),
-      comment: s(c.comment, italic),
-      "comment.doc": s(c.commentDoc, italic),
+      comment: s(c.comment, deco),
+      "comment.doc": s(c.commentDoc, deco),
       constant: s(c.number),
       constructor: s(c.function),
       "diff.minus": s(c.error),
@@ -201,12 +209,12 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
       hint: s(c.hint),
       keyword: s(c.keyword),
       label: s(c.enum),
-      link_text: s(c.enum, italic),
+      link_text: s(c.enum, deco),
       link_uri: s(c.link),
       namespace: s(c.namespace),
       number: s(c.number),
       operator: s(c.operator),
-      predictive: s(c.predictive, italic),
+      predictive: s(c.predictive, deco),
       preproc: s(c.type),
       primary: s(c.fg),
       property: s(c.property),
@@ -229,7 +237,7 @@ export const buildStyle = (palette: Palette, mode: Mode, options: BuildOptions =
       type: s(c.type),
       variable: s(c.fg),
       "variable.parameter": s(c.parameter),
-      "variable.special": s(c.keyword, italic),
+      "variable.special": s(c.keyword, deco),
       variant: s(c.enum),
     },
   };

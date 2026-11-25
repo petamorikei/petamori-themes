@@ -10,6 +10,8 @@ A collection of color themes by Petamori, built around pink.
 
 Dusk variants are dark themes, and Dawn variants are light themes.
 
+Each variant also comes in an Italic version (for example, Peony Dusk Italic), which renders comments, documentation comments, `self` / `this`, link text, and quotes in italics. The colors are the same. In the regular versions, only Markdown emphasis is italic.
+
 All colors are generated from a shared palette, and text colors are checked against WCAG 2 contrast ratios.
 
 The same themes are also available for [Zed](https://zed.dev).

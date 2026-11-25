@@ -21,8 +21,14 @@ export interface VscodeTheme {
 
 const CLEAR = "#00000000";
 
-export const buildVscodeTheme = (palette: Palette, mode: Mode, name: string): VscodeTheme => {
+/**
+ * italic: 飾りのイタリック（コメント、ドキュメントコメント、self / this、リンクの文字、引用）を使うか。
+ * trueでItalic版、省略時は無印版。Markdownの強調（markup.italic）は書いた人が斜体にした部分なので、どちらでもイタリック
+ */
+export const buildVscodeTheme = (palette: Palette, mode: Mode, name: string, italic = false): VscodeTheme => {
   const r = resolveColors(palette, mode);
+  /** 飾りのイタリック。Italic版だけで付ける */
+  const deco = italic ? "italic" : undefined;
   const { tint, statusBorder } = r;
   const s = r.surfaces;
   const i = r.inks;
@@ -393,12 +399,12 @@ export const buildVscodeTheme = (palette: Palette, mode: Mode, name: string): Vs
 
   // TextMateのスコープ。後ろの規則ほど優先されるわけではなく、より具体的なスコープが優先される
   const tokenColors: TokenRule[] = [
-    rule("Comment", ["comment", "punctuation.definition.comment"], i.comment, "italic"),
+    rule("Comment", ["comment", "punctuation.definition.comment"], i.comment, deco),
     rule(
       "Documentation comment",
       ["comment.block.documentation", "comment.line.documentation", "comment.line.double-slash.documentation"],
       i.commentDoc,
-      "italic",
+      deco,
     ),
     rule("String", ["string", "punctuation.definition.string"], i.string),
     rule("String escape", ["constant.character.escape", "constant.other.placeholder"], i.keyword),
@@ -446,7 +452,7 @@ export const buildVscodeTheme = (palette: Palette, mode: Mode, name: string): Vs
     rule("Preprocessor", ["meta.preprocessor", "entity.name.function.preprocessor"], i.type),
     rule("Variable", ["variable", "variable.other.readwrite"], i.fg),
     rule("Parameter", ["variable.parameter", "meta.parameter variable"], i.parameter),
-    rule("Special variable", ["variable.language"], i.keyword, "italic"),
+    rule("Special variable", ["variable.language"], i.keyword, deco),
     rule(
       "Property",
       [
@@ -474,10 +480,10 @@ export const buildVscodeTheme = (palette: Palette, mode: Mode, name: string): Vs
     rule("Bold", ["markup.bold"], i.number, "bold"),
     rule("Italic", ["markup.italic"], i.accent, "italic"),
     rule("Link URL", ["markup.underline.link", "markup.link"], i.link),
-    rule("Link text", ["string.other.link"], i.enum, "italic"),
+    rule("Link text", ["string.other.link"], i.enum, deco),
     rule("Inline code", ["markup.inline.raw", "markup.fenced_code.block", "markup.raw"], i.string),
     rule("List marker", ["punctuation.definition.list.begin", "markup.list punctuation.definition.list"], i.keyword),
-    rule("Quote", ["markup.quote"], i.textMuted, "italic"),
+    rule("Quote", ["markup.quote"], i.textMuted, deco),
     rule("Inserted", ["markup.inserted"], i.string),
     rule("Deleted", ["markup.deleted"], i.error),
     rule("Changed", ["markup.changed"], i.number),
@@ -502,7 +508,7 @@ export const buildVscodeTheme = (palette: Palette, mode: Mode, name: string): Vs
     property: i.property,
     label: i.enum,
     keyword: i.keyword,
-    comment: { foreground: i.comment, fontStyle: "italic" },
+    comment: deco ? { foreground: i.comment, fontStyle: deco } : i.comment,
     string: i.string,
     number: i.number,
     regexp: i.number,

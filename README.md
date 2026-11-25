@@ -10,7 +10,13 @@ Petamoriのエディタ用テーマのセット。配色（`src/palettes/`）と
 
 ## 収録しているテーマ
 
-どのテーマも、Dusk（dark）、Dawn（light）がある。Zed版には、それぞれのBlur（ぼかし）もある。iTerm2版には、DuskとDawnを1つにまとめ、macOSの外観に合わせて切り替わるプリセットもある。
+どのテーマも、Dusk（dark）、Dawn（light）がある。Zed版とVS Code版には、それぞれのItalic（コメントなどをイタリックにする版）もある。Zed版には、それらのBlur（ぼかし）もある。iTerm2版には、DuskとDawnを1つにまとめ、macOSの外観に合わせて切り替わるプリセットもある。
+
+| エディタ | 1つのテーマにつき                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| Zed      | Dusk、Dawn、Dusk Blur、Dawn Blur、Dusk Italic、Dawn Italic、Dusk Italic Blur、Dawn Italic Blur（8つ） |
+| VS Code  | Dusk、Dawn、Dusk Italic、Dawn Italic（4つ）                                                           |
+| iTerm2   | Dusk、Dawn、両方を持つプリセット（3つ）。イタリックは色ではないので、Italic版はない                   |
 
 | テーマ  | 配色                                                                                                                             | ファイル                  |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
@@ -28,13 +34,15 @@ zed/                    # Zedの拡張機能。登録ではpath = "zed"。拡張
   themes/               # 生成されるファイル。直接編集しない
     <id>.json           # Dusk / Dawn（例: peony.json）
     <id>-blur.json      # Dusk Blur / Dawn Blur（例: peony-blur.json）
+    <id>-italic.json    # Dusk Italic / Dawn Italic（例: peony-italic.json）
+    <id>-italic-blur.json  # Dusk Italic Blur / Dawn Italic Blur（例: peony-italic-blur.json）
 vscode/                 # VS Codeの拡張機能
   package.json          # 生成されるファイル。直接編集しない（元はsrc/targets/vscode/extension.tsのMANIFEST）
   README.md             # Marketplaceのページになる（英語）
   LICENSE               # ../LICENSEへのシンボリックリンク
   .vscodeignore
   themes/               # 生成されるファイル。直接編集しない
-    <テーマ名>-color-theme.json  # 例: peony-dusk-color-theme.json
+    <テーマ名>-color-theme.json  # 例: peony-dusk-color-theme.json、peony-dusk-italic-color-theme.json
 iterm2/                 # iTerm2のカラープリセット。生成されるファイル。直接編集しない
   <テーマ名>.itermcolors      # Dusk / Dawnそれぞれ（例: Peony Dusk.itermcolors）。ファイル名がプリセットの名前になる
   <ファミリー名>.itermcolors  # DuskとDawnの両方を持つ（例: Peony.itermcolors）
@@ -53,7 +61,7 @@ src/
     zed/                # Zed向け
       theme.ts          # 計算した色を、Zedのキーに割り当てる
       blur.ts           # ブラー版の組み立て
-      family.ts         # ダーク・ライトとブラー版をまとめて組み立て、JSONに書き出す
+      family.ts         # ダーク・ライト、ブラー版、Italic版をまとめて組み立て、JSONに書き出す
       contrast.ts       # Zedのキーの分類の規則（検査用）
     vscode/             # VS Code向け
       theme.ts          # 計算した色を、VS CodeのUIの色・TextMateのスコープ・セマンティックトークンに割り当てる
@@ -82,7 +90,7 @@ bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<ve
 
 ### VS Code版を手元で試す
 
-- `.vsix`を入れる: `bun run package:vscode`のあと、`code --install-extension vscode/petamori-themes-0.1.0.vsix`を実行するか、VS Codeのコマンドパレットで「Extensions: Install from VSIX...」を選ぶ。色を変えたら作り直して、もう一度入れる。
+- `.vsix`を入れる: `bun run package:vscode`のあと、`code --install-extension vscode/petamori-themes-0.2.0.vsix`を実行するか、VS Codeのコマンドパレットで「Extensions: Install from VSIX...」を選ぶ。色を変えたら作り直して、もう一度入れる。
 - 開発用のウィンドウで開く: `code --extensionDevelopmentPath="$PWD/vscode"`。インストールせずに試せる。色を変えたら`bun run build`のあと、開発用のウィンドウで「Developer: Reload Window」を実行する。
 - テーマの切り替え: コマンドパレットの「Preferences: Color Theme」（`cmd-k cmd-t`）で、上下キーで見比べられる。
 
@@ -99,7 +107,7 @@ bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<ve
 
 1. `src/palettes/<名前>.ts`を作る。`peony.ts`と同じく`ThemeSet`（id、ファミリー名、ダーク・ライトのテーマ名、配色）を定義する。
 2. `src/palettes/index.ts`の`themeSets`に足す。
-3. `bun run build`を実行すると、Zed版（`zed/themes/<id>.json`、`zed/themes/<id>-blur.json`）、VS Code版（`vscode/themes/`、`vscode/package.json`の`contributes.themes`）、iTerm2版（`iterm2/<テーマ名>.itermcolors`、`iterm2/<ファミリー名>.itermcolors`）ができる。
+3. `bun run build`を実行すると、Zed版（`zed/themes/<id>.json`、`zed/themes/<id>-blur.json`、`zed/themes/<id>-italic.json`、`zed/themes/<id>-italic-blur.json`）、VS Code版（`vscode/themes/`、`vscode/package.json`の`contributes.themes`）、iTerm2版（`iterm2/<テーマ名>.itermcolors`、`iterm2/<ファミリー名>.itermcolors`）ができる。
 4. `zed/extension.toml`と、`src/targets/vscode/extension.ts`の`MANIFEST.version`を上げる（例: 0.1.0 → 0.2.0）。
 
 どのキーにどの役割・段階を使うか（`src/targets/<エディタ>/theme.ts`）は、すべてのテーマで共通。テーマごとに変えるのは、役割ごとの色相と彩度、段階の目標値、背景の明度などの値だけ。
@@ -144,6 +152,13 @@ bun run package:vscode  # VS Code版を生成して、vscode/petamori-themes-<ve
 - **背景と枠線** = エディタの背景からの明度の差。タイトルバー < パネル < エディタ < ポップアップは両テーマで同じ向き、hoverや枠線は文字に近づく向き（ダークは明るく、ライトは暗く）にずらす。
 - **半透明の色**（選択範囲、検索結果など）= 文字や背景の色にアルファを付けたもの。ライトはアルファを`lightOverlayScale`倍にする。
 - `tab.active_background`と`editor.gutter.background`は、エディタの背景と同じ色にする（縞模様に見えないように）。
+
+### Italic版
+
+- Italic版と無印版の違いはフォントの形だけで、色は同じ。テーマ名の末尾に` Italic`を付ける（ブラー版は` Italic Blur`）。
+- Italic版だけがイタリックにするもの（飾りのイタリック）: コメント、ドキュメントコメント、`self` / `this`などの特別な変数、Markdownのリンクの文字。Zedでは予測の候補（`predictive`）、VS Codeでは引用（`markup.quote`）とセマンティックトークンの`comment`も。
+- Markdownの強調（Zedの`emphasis`、VS Codeの`markup.italic`）は、書いた人が斜体にした部分なので、無印版でもイタリックにする。
+- どれを飾りのイタリックにするかは`src/targets/<エディタ>/theme.ts`の`deco`。すべてのテーマで共通。
 
 ### ブラー版
 

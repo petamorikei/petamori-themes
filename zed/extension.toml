@@ -1,6 +1,6 @@
 id = "petamori-themes"
 name = "Petamori Themes"
-version = "0.1.0"
+version = "0.2.0"
 schema_version = 1
 authors = ["kei <petamorikei@gmail.com>"]
 description = "A collection of color themes by Petamori."

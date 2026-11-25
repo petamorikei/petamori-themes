@@ -207,12 +207,10 @@
             "color": "#e5c470"
           },
           "comment": {
-            "color": "#8f6c7b",
-            "font_style": "italic"
+            "color": "#8f6c7b"
           },
           "comment.doc": {
-            "color": "#a98595",
-            "font_style": "italic"
+            "color": "#a98595"
           },
           "constant": {
             "color": "#e5c470"
@@ -253,8 +251,7 @@
             "color": "#c3c2ff"
           },
           "link_text": {
-            "color": "#c3c2ff",
-            "font_style": "italic"
+            "color": "#c3c2ff"
           },
           "link_uri": {
             "color": "#8bd6c1"
@@ -269,8 +266,7 @@
             "color": "#d095b0"
           },
           "predictive": {
-            "color": "#8f6c7b",
-            "font_style": "italic"
+            "color": "#8f6c7b"
           },
           "preproc": {
             "color": "#caa4f5"
@@ -340,8 +336,7 @@
             "color": "#ebbf9b"
           },
           "variable.special": {
-            "color": "#ff93b6",
-            "font_style": "italic"
+            "color": "#ff93b6"
           },
           "variant": {
             "color": "#c3c2ff"
@@ -553,12 +548,10 @@
             "color": "#6c5200"
           },
           "comment": {
-            "color": "#996e81",
-            "font_style": "italic"
+            "color": "#996e81"
           },
           "comment.doc": {
-            "color": "#90667a",
-            "font_style": "italic"
+            "color": "#90667a"
           },
           "constant": {
             "color": "#6c5200"
@@ -599,8 +592,7 @@
             "color": "#534d91"
           },
           "link_text": {
-            "color": "#534d91",
-            "font_style": "italic"
+            "color": "#534d91"
           },
           "link_uri": {
             "color": "#006150"
@@ -615,8 +607,7 @@
             "color": "#8a4a6a"
           },
           "predictive": {
-            "color": "#996e81",
-            "font_style": "italic"
+            "color": "#996e81"
           },
           "preproc": {
             "color": "#7446a1"
@@ -686,8 +677,7 @@
             "color": "#7a4b22"
           },
           "variable.special": {
-            "color": "#b5005f",
-            "font_style": "italic"
+            "color": "#b5005f"
           },
           "variant": {
             "color": "#534d91"

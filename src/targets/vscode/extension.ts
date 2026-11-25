@@ -1,7 +1,7 @@
 // VS Codeの拡張機能（vscode/）の書き出し。テーマのファイルと、package.jsonを生成する。
 // package.jsonは生成されるファイルなので直接編集せず、ここのMANIFESTを編集する。
 import { $ } from "bun";
-import type { Mode, ThemeSet } from "../../engine/palette.ts";
+import { ITALIC_SUFFIX, type Mode, type ThemeSet } from "../../engine/palette.ts";
 import { buildVscodeTheme, type VscodeTheme } from "./theme.ts";
 
 const DIR = "vscode";
@@ -11,7 +11,7 @@ const MANIFEST = {
   name: "petamori-themes",
   displayName: "Petamori Themes",
   description: "A collection of color themes by Petamori.",
-  version: "0.1.0",
+  version: "0.2.0",
   // 公開前に、Marketplaceで作ったpublisherのIDに合わせる（今は仮の値）
   publisher: "petamori",
   license: "MIT",
@@ -21,7 +21,13 @@ const MANIFEST = {
   keywords: ["theme", "color-theme", "dark", "light", "pink"],
 };
 
-const MODES: Mode[] = ["dark", "light"];
+/** 書き出す順番。無印版のDusk・Dawnのあとに、Italic版のDusk・Dawnを並べる */
+const VARIANTS: { mode: Mode; italic: boolean }[] = [
+  { mode: "dark", italic: false },
+  { mode: "light", italic: false },
+  { mode: "dark", italic: true },
+  { mode: "light", italic: true },
+];
 const slug = (name: string): string => name.toLowerCase().replace(/\s+/g, "-");
 
 const writeJson = async (path: string, value: unknown): Promise<void> => {
@@ -35,9 +41,10 @@ export const writeVscodeExtension = async (sets: ThemeSet[]): Promise<VscodeThem
   const themes: VscodeTheme[] = [];
   const contributes: { label: string; uiTheme: "vs-dark" | "vs"; path: string }[] = [];
   for (const set of sets) {
-    for (const mode of MODES) {
-      const name = set.names[mode];
-      const theme = buildVscodeTheme(set.palette, mode, name);
+    for (const { mode, italic } of VARIANTS) {
+      // テーマ名はZed版と同じ（例: Peony Dusk Italic）
+      const name = `${set.names[mode]}${italic ? ITALIC_SUFFIX : ""}`;
+      const theme = buildVscodeTheme(set.palette, mode, name, italic);
       const file = `themes/${slug(name)}-color-theme.json`;
       await writeJson(`${DIR}/${file}`, theme);
       themes.push(theme);

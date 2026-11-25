@@ -342,16 +342,14 @@
       "name": "Comment",
       "scope": ["comment", "punctuation.definition.comment"],
       "settings": {
-        "foreground": "#9b7e8e",
-        "fontStyle": "italic"
+        "foreground": "#9b7e8e"
       }
     },
     {
       "name": "Documentation comment",
       "scope": ["comment.block.documentation", "comment.line.documentation", "comment.line.double-slash.documentation"],
       "settings": {
-        "foreground": "#947887",
-        "fontStyle": "italic"
+        "foreground": "#947887"
       }
     },
     {
@@ -484,8 +482,7 @@
       "name": "Special variable",
       "scope": ["variable.language"],
       "settings": {
-        "foreground": "#af4077",
-        "fontStyle": "italic"
+        "foreground": "#af4077"
       }
     },
     {
@@ -564,8 +561,7 @@
       "name": "Link text",
       "scope": ["string.other.link"],
       "settings": {
-        "foreground": "#41639a",
-        "fontStyle": "italic"
+        "foreground": "#41639a"
       }
     },
     {
@@ -586,8 +582,7 @@
       "name": "Quote",
       "scope": ["markup.quote"],
       "settings": {
-        "foreground": "#7d6271",
-        "fontStyle": "italic"
+        "foreground": "#7d6271"
       }
     },
     {
@@ -637,10 +632,7 @@
     "property": "#8a5263",
     "label": "#41639a",
     "keyword": "#af4077",
-    "comment": {
-      "foreground": "#9b7e8e",
-      "fontStyle": "italic"
-    },
+    "comment": "#9b7e8e",
     "string": "#4b6c1d",
     "number": "#8a5800",
     "regexp": "#8a5800",

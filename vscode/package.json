@@ -2,7 +2,7 @@
   "name": "petamori-themes",
   "displayName": "Petamori Themes",
   "description": "A collection of color themes by Petamori.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "petamori",
   "license": "MIT",
   "repository": {
@@ -35,6 +35,16 @@
         "path": "./themes/peony-dawn-color-theme.json"
       },
       {
+        "label": "Peony Dusk Italic",
+        "uiTheme": "vs-dark",
+        "path": "./themes/peony-dusk-italic-color-theme.json"
+      },
+      {
+        "label": "Peony Dawn Italic",
+        "uiTheme": "vs",
+        "path": "./themes/peony-dawn-italic-color-theme.json"
+      },
+      {
         "label": "Fuchsia Dusk",
         "uiTheme": "vs-dark",
         "path": "./themes/fuchsia-dusk-color-theme.json"
@@ -45,6 +55,16 @@
         "path": "./themes/fuchsia-dawn-color-theme.json"
       },
       {
+        "label": "Fuchsia Dusk Italic",
+        "uiTheme": "vs-dark",
+        "path": "./themes/fuchsia-dusk-italic-color-theme.json"
+      },
+      {
+        "label": "Fuchsia Dawn Italic",
+        "uiTheme": "vs",
+        "path": "./themes/fuchsia-dawn-italic-color-theme.json"
+      },
+      {
         "label": "Berry Dusk",
         "uiTheme": "vs-dark",
         "path": "./themes/berry-dusk-color-theme.json"
@@ -53,6 +73,16 @@
         "label": "Berry Dawn",
         "uiTheme": "vs",
         "path": "./themes/berry-dawn-color-theme.json"
+      },
+      {
+        "label": "Berry Dusk Italic",
+        "uiTheme": "vs-dark",
+        "path": "./themes/berry-dusk-italic-color-theme.json"
+      },
+      {
+        "label": "Berry Dawn Italic",
+        "uiTheme": "vs",
+        "path": "./themes/berry-dawn-italic-color-theme.json"
       }
     ]
   }

@@ -34,7 +34,8 @@ const str = (style: Style, key: string): string => {
   return v;
 };
 
-export const buildBlurTheme = (palette: Palette, mode: Mode, name: string): Theme => {
+/** italic: 飾りのイタリックを使うか（Italic版）。色には影響しない */
+export const buildBlurTheme = (palette: Palette, mode: Mode, name: string, italic = false): Theme => {
   const { opacity, overlay } = palette.blur;
   // 背景や枠線の色は文字の色に依存しないので、不透明版から取る
   const opaque = buildStyle(palette, mode);
@@ -55,7 +56,7 @@ export const buildBlurTheme = (palette: Palette, mode: Mode, name: string): Them
     ...overlayColors.filter(([k]) => !editorKeys.has(k) && !transientKeys.has(k)).map(([, c]) => c),
     ...barKeys.map((k) => withAlpha(str(opaque, k), opacity)),
   ];
-  const base = buildStyle(palette, mode, { bases, editorOverlays, uiOverlays });
+  const base = buildStyle(palette, mode, { bases, editorOverlays, uiOverlays, italic });
   const style: Style = { "background.appearance": "blurred", ...base, background };
   for (const k of transparentKeys) style[k] = CLEAR;
   for (const [k, [source, alpha]] of Object.entries(overlay[mode])) style[k] = withAlpha(str(base, source), alpha);

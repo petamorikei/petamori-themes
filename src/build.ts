@@ -1,6 +1,6 @@
 // src/palettes/index.tsに登録したテーマを、各エディタ向けに書き出す
-// - Zed: zed/themes/<id>.jsonとzed/themes/<id>-blur.json
-// - VS Code: vscode/themes/<テーマ名>-color-theme.jsonとvscode/package.json（ブラー版はない）
+// - Zed: zed/themes/<id>.json、zed/themes/<id>-blur.jsonと、Italic版のzed/themes/<id>-italic.json、zed/themes/<id>-italic-blur.json
+// - VS Code: vscode/themes/<テーマ名>-color-theme.jsonとvscode/package.json（無印版とItalic版。ブラー版はない）
 // - iTerm2: iterm2/<テーマ名>.itermcolorsと、両方のモードを持つiterm2/<ファミリー名>.itermcolors（ブラー版はない）
 // 使い方: bun run build
 
@@ -8,14 +8,12 @@ import { gamutNotes } from "./engine/resolve.ts";
 import { themeSets } from "./palettes/index.ts";
 import { writeItermPresets } from "./targets/iterm2/preset.ts";
 import { writeVscodeExtension } from "./targets/vscode/extension.ts";
-import { buildBlurred, buildOpaque, writeFamily } from "./targets/zed/family.ts";
+import { buildFamilies, writeFamily } from "./targets/zed/family.ts";
 
 for (const set of themeSets) {
-  const opaque = buildOpaque(set);
-  const blurred = buildBlurred(set);
-  await writeFamily(`zed/themes/${set.id}.json`, set.family, opaque);
-  await writeFamily(`zed/themes/${set.id}-blur.json`, `${set.family} Blur`, blurred);
-  console.log(`Zed: ${[...opaque, ...blurred].map((t) => t.name).join(", ")}`);
+  const families = buildFamilies(set);
+  for (const f of families) await writeFamily(f.path, f.name, f.themes);
+  console.log(`Zed: ${families.flatMap((f) => f.themes.map((t) => t.name)).join(", ")}`);
 }
 
 const vscodeThemes = await writeVscodeExtension(themeSets);
