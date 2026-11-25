@@ -91,7 +91,9 @@ export const peony: ThemeSet = {
           "tab_bar.background": ["background", 0.3],
           "surface.background": ["background", 0.3],
           "elevated_surface.background": ["elevated_surface.background", 0.95],
-          "editor.subheader.background": ["editor.subheader.background", 0.5],
+          // 複数のファイルを並べる画面（差分など）のファイル名の見出し。透過するウィンドウでは、Zedはこの色が
+          // 不透明のときしか見出しの背景を塗らず、半透明だと下の行が透けて文字が重なるので、不透明にする（Zedのheader.rs）
+          "editor.subheader.background": ["editor.subheader.background", 1],
           "editor.active_line.background": ["element.hover", 0.4],
           "editor.highlighted_line.background": ["element.hover", 0.5],
           "element.background": ["element.hover", 0.4],
@@ -113,7 +115,7 @@ export const peony: ThemeSet = {
           "tab_bar.background": ["background", 0.3],
           "surface.background": ["background", 0.3],
           "elevated_surface.background": ["elevated_surface.background", 0.95],
-          "editor.subheader.background": ["editor.subheader.background", 0.5],
+          "editor.subheader.background": ["editor.subheader.background", 1],
           "editor.active_line.background": ["element.active", 0.3],
           "editor.highlighted_line.background": ["element.active", 0.4],
           "element.background": ["element.background", 0.6],
